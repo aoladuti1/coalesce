@@ -1,5 +1,5 @@
 #include <iostream>
-#include "bitstore.h"
+#include "bitstore.hpp"
 
 int main(int, char**){
     std::cout << "X";
