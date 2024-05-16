@@ -1,5 +1,5 @@
 #include <iostream>
-#include "bitstore.h"
+#include "bitstore.hpp"
 
 template <std::size_t N>
 BitStore<N>::BitStore() noexcept {
