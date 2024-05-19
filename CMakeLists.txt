@@ -18,6 +18,5 @@ list(APPEND CMAKE_PREFIX_PATH lib/cmake/bitstore)
 find_package(BitStorePackage CONFIG REQUIRED)
 target_link_libraries(Coalesce PRIVATE BS::BitStore)
 target_include_directories(Coalesce PUBLIC include)
-# --- Development only ---
 
 
