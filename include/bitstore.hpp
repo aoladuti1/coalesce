@@ -106,4 +106,6 @@ std::ostream& operator<<(std::ostream &os, const BitStore<N> &bs) {
     return os << std::bitset<N>(bs.bitset);
 }
 
+int XXX();
+
 #endif
