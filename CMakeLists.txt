@@ -16,7 +16,7 @@ add_executable(Coalesce ${SOURCES})
 
 list(APPEND CMAKE_PREFIX_PATH lib/cmake/bitstore)
 find_package(BitStorePackage CONFIG REQUIRED)
-target_link_libraries(Coalesce PRIVATE BS::BitStore)
+target_link_libraries(Coalesce PRIVATE CSC::BitStore)
 target_include_directories(Coalesce PUBLIC include)
 
 
