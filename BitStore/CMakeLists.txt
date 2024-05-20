@@ -7,15 +7,21 @@ file(GLOB PUBLIC_HEADERS inc/bitstore.hpp)
 set(CMK_OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/lib/cmake/bitstore)
 set(PACKAGE_NAME BitStorePackage)
 set(STATIC_OR_SHARED STATIC)
-set(DRIVER_FILE testing/test.cpp)
+set(TEST_DRIVE ${CMAKE_SOURCE_DIR}/testing/test.cpp)
 
 # Create library file
 add_library(BitStore ${STATIC_OR_SHARED} ${SOURCES} ${HEADERS})
-add_executable(Testing ${DRIVER_FILE})
+if (EXISTS ${TEST_DRIVE})
+    add_executable(Testing ${TEST_DRIVE})
+    set_target_properties(Testing PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/testing
+    )
+    target_include_directories(Testing PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/inc)
+endif()
 
 # Include inc directory for THIS project
 target_include_directories(BitStore PRIVATE inc)
-target_include_directories(Testing PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/inc)
+
 
 # Assign the output routes to TargetSet
 install(TARGETS BitStore EXPORT TargetSet
