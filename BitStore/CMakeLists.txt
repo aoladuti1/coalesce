@@ -34,7 +34,7 @@ install(FILES ${PUBLIC_HEADERS} DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/include)
 # Export targets
 install(EXPORT TargetSet 
         FILE ${PACKAGE_NAME}.cmake
-        NAMESPACE BS::
+        NAMESPACE CSC::
         DESTINATION ${CMK_OUTPUT})
 
 # Generate and install package config files
