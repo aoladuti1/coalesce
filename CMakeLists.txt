@@ -5,17 +5,18 @@ include(CTest)
 include(CPack)
 enable_testing()
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CoalesceProj_SOURCE_DIR}/Coalesce/bin)
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CoalesceProj_SOURCE_DIR}/Coalesce/lib)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CoalesceProj_SOURCE_DIR}/Coalesce/lib)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY bin)
 set(STATIC_OR_SHARED STATIC)
-
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
+set(LINK_MODE EXTERNAL)
 
+file(GLOB SOURCES src/*.cpp)
+add_executable(Coalesce ${SOURCES})
 
-add_subdirectory(BitStore)
-add_subdirectory(Coalesce)
-
+list(APPEND CMAKE_PREFIX_PATH lib/cmake/bitstore)
+find_package(BitStorePackage CONFIG REQUIRED)
+target_link_libraries(Coalesce PRIVATE CSC::BitStore)
+target_include_directories(Coalesce PUBLIC include)
 
 
