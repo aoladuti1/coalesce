@@ -6,3 +6,6 @@ Coalesce/bin/
 bitstore/.vscode/
 
 .vscode/
+
+bitstore/testing/
+bitstore/include/
