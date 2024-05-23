@@ -77,9 +77,8 @@ namespace csc {
             friend std::ostream&  operator<<(std::ostream& os, const ByteStore& bs);
             friend std::ostream&  operator>>(const ByteStore& bs, std::ostream& os);
             
-            // These two functions should pop internal bytes...
-            friend std::ofstream& operator<<(std::ofstream& ofs, ByteStore& bs);
-            friend std::ofstream& operator>>(ByteStore& bs, std::ofstream& ofs);
+            friend std::ofstream& operator<<(std::ofstream& ofs, const ByteStore& bs);
+            friend std::ofstream& operator>>(const ByteStore& bs, std::ofstream& ofs);
             
             friend std::istream&  operator>>(std::istream& is, ByteStore& bs);
             friend std::istream&  operator<<(ByteStore& bs, std::istream& is);
