@@ -1,30 +1,31 @@
 cmake_minimum_required(VERSION 3.15.0)
-project(BitStoreProj VERSION 0.1.0 LANGUAGES CXX)
+project(ByteStoreProj VERSION 0.1.0 LANGUAGES CXX)
 file(GLOB SOURCES src/*.cpp)
 file(GLOB HEADERS inc/*.hpp)
 
-file(GLOB PUBLIC_HEADERS inc/bitstore.hpp)
-set(CMK_OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/lib/cmake/bitstore)
-set(PACKAGE_NAME BitStorePackage)
+file(GLOB PUBLIC_HEADERS inc/bytestore.hpp)
+set(CMK_OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/lib/cmake/bytestore)
+set(PACKAGE_NAME ByteStorePackage)
 set(STATIC_OR_SHARED STATIC)
 set(TEST_DRIVE ${CMAKE_SOURCE_DIR}/testing/test.cpp)
 
 # Create library file
-add_library(BitStore ${STATIC_OR_SHARED} ${SOURCES} ${HEADERS})
+add_library(ByteStore ${STATIC_OR_SHARED} ${SOURCES} ${HEADERS})
+
+# Include inc directory for THIS project
+target_include_directories(ByteStore PRIVATE inc)
+
 if (EXISTS ${TEST_DRIVE})
-    add_executable(Testing ${TEST_DRIVE})
+    add_executable(Testing ${SOURCES} ${TEST_DRIVE})
     set_target_properties(Testing PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/testing
     )
     target_include_directories(Testing PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/inc)
 endif()
 
-# Include inc directory for THIS project
-target_include_directories(BitStore PRIVATE inc)
-
 
 # Assign the output routes to TargetSet
-install(TARGETS BitStore EXPORT TargetSet
+install(TARGETS ByteStore EXPORT TargetSet
         LIBRARY DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/lib
         ARCHIVE DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/lib
         RUNTIME DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/bin)
