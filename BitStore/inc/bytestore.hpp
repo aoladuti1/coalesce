@@ -34,9 +34,6 @@ namespace csc {
     }
     
     class ByteStore {
-        private:
-            void  readFile(std::string inputFile);
-            void writeFile(std::string outputFile, bool append = true);
         public:
             std::vector<std::byte> store;
 
@@ -70,6 +67,9 @@ namespace csc {
             std::bitset<BYTE_SIZE> popBitset();
 
             void extend(ByteStore& bs);
+
+            void readFromFile(std::string inputFile);
+            void writeToFile(std::string outputFile, bool append = true);
 
             std::byte&       operator[](std::size_t i);
             const std::byte& operator[](std::size_t i) const;
