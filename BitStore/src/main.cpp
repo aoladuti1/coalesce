@@ -2,7 +2,7 @@
 
 using namespace csc;
 
-void ByteStore::readFromFile(std::string inputFile) {
+void ByteStore::readFromFile(const std::string inputFile) {
     std::ifstream rf(inputFile, std::ios::in | std::ios::binary);
     if(!rf) {
         throw std::invalid_argument("Can't open file " + inputFile);
@@ -13,8 +13,8 @@ void ByteStore::readFromFile(std::string inputFile) {
     rf.close();
 }
 
-void ByteStore::writeToFile(std::string outputFile,
-                                 bool append) const {
+void ByteStore::writeToFile(const std::string outputFile,
+                            const bool append) const {
     const auto flags = std::ios::out | std::ios::binary;
     std::ofstream wf(outputFile, append ? flags | std::ios::app : flags);
     if(!wf) {
@@ -31,7 +31,7 @@ ByteStore::ByteStore() noexcept {
     store = std::vector<std::byte>();
 }
 
-ByteStore::ByteStore(std::size_t nBytes) noexcept {
+ByteStore::ByteStore(const std::size_t nBytes) noexcept {
     store = std::vector<std::byte>(nBytes);
 }
 
@@ -45,7 +45,7 @@ ByteStore::ByteStore(const std::string inputFile) noexcept {
     }
 }
 
-ByteStore::ByteStore(const std::byte b) noexcept {
+ByteStore::ByteStore(const std::byte& b) noexcept {
     store = std::vector<std::byte>();
     store.push_back(b);
 }
@@ -58,82 +58,82 @@ std::string ByteStore::toString() const {
     return ret;    
 }
 
-void ByteStore::set(std::size_t pos, const unsigned char b) {
+void ByteStore::set(const std::size_t pos, const unsigned char b) {
     store[pos] = (std::byte) b;
 }
 
-void ByteStore::set(std::size_t pos, const std::byte byte) {
+void ByteStore::set(const std::size_t pos, const std::byte byte) {
     store[pos] = byte;
 }
 
-void ByteStore::set(std::size_t pos, const std::bitset<BYTE_SIZE> bset) {
+void ByteStore::set(const std::size_t pos, const std::bitset<BYTE_SIZE> bset) {
     store[pos] = (std::byte) bset.to_ullong();
 }
 
-const std::byte ByteStore::get(std::size_t pos) const {
+const std::byte ByteStore::get(const std::size_t pos) const {
     return store.at(pos);
 }
 
-std::byte ByteStore::get(std::size_t pos) {
+std::byte ByteStore::get(const std::size_t pos) {
     return store.at(pos);
 }
 
-const std::bitset<BYTE_SIZE> ByteStore::getBitset(std::size_t pos) const {
+const std::bitset<BYTE_SIZE> ByteStore::getBitset(const std::size_t pos) const {
     return std::bitset<BYTE_SIZE>((unsigned char) store.at(pos));
 }
 
-std::bitset<BYTE_SIZE> ByteStore::getBitset(std::size_t pos) {
+std::bitset<BYTE_SIZE> ByteStore::getBitset(const std::size_t pos) {
     return std::bitset<BYTE_SIZE>((unsigned char) store.at(pos));
 }
 
-bool ByteStore::getBit(std::size_t pos) const {
+bool ByteStore::getBit(const std::size_t pos) const {
     const std::bitset<BYTE_SIZE> bset = getBitset(pos / BYTE_SIZE);
     return bset[BYTE_SIZE-1-(pos % BYTE_SIZE)];
 }
 
-inline void ByteStore::insert(std::size_t pos, const std::byte byte) {
+void ByteStore::insert(const std::size_t pos, const std::byte& byte) {
     store.insert(store.begin() + pos, byte);
 }
 
-inline void ByteStore::insert(std::size_t pos, const std::bitset<BYTE_SIZE> bset) {
+void ByteStore::insert(const std::size_t pos, const std::bitset<BYTE_SIZE>& bset) {
     insert(pos, (std::byte) bset.to_ullong());
 }
 
-inline void ByteStore::insert(std::size_t pos, unsigned char byte) {
+void ByteStore::insert(const std::size_t pos, const unsigned char& byte) {
     insert(pos, (std::byte) byte);
 }
 
-inline void ByteStore::pushEnd(const std::byte byte) {
+void ByteStore::pushEnd(const std::byte& byte) {
     store.push_back(byte);
 }
 
-inline void ByteStore::pushEnd(const std::bitset<BYTE_SIZE> bset) {
+void ByteStore::pushEnd(const std::bitset<BYTE_SIZE>& bset) {
     pushEnd((std::byte) bset.to_ullong());
 }
 
-inline void ByteStore::pushEnd(unsigned char b) {
+void ByteStore::pushEnd(const unsigned char& b) {
     pushEnd((std::byte) b);
 }
 
-inline std::byte ByteStore::popEnd() {
+std::byte ByteStore::popEnd() {
     auto ret = store.back();
     store.pop_back();
     return ret;
 }
 
-inline std::bitset<BYTE_SIZE> ByteStore::popEndBitset() {
+std::bitset<BYTE_SIZE> ByteStore::popEndBitset() {
     return std::bitset<BYTE_SIZE>((unsigned long long) popEnd());
 }
 
-inline void ByteStore::extend(const ByteStore& bs) {
+void ByteStore::extend(const ByteStore& bs) {
     store.insert(std::end(store), std::begin(bs.store), std::end(bs.store));
 }
 
-std::byte& ByteStore::operator[](std::size_t i) {
+std::byte& ByteStore::operator[](const std::size_t i) {
     return store[i];
 }
 
-const std::byte& ByteStore::operator[](std::size_t i) const {
+const std::byte& ByteStore::operator[](const std::size_t i) const {
     return store[i];
 }
 

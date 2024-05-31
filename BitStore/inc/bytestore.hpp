@@ -18,7 +18,7 @@ namespace csc {
     }
 
     template <std::size_t N>
-    std::byte getByte(std::size_t pos, const std::bitset<N>& bset) {
+    std::byte getByte(const std::size_t pos, const std::bitset<N>& bset) {
         short limit = BYTE_SIZE;
         if (pos == getByteCount(bset)-1){
             constexpr short remainder_bits = N % 8;
@@ -42,10 +42,11 @@ namespace csc {
             inline std::size_t bitsize() const { return size() * BYTE_SIZE; }
 
             void readFromFile(const std::string inputFile);
-            void writeToFile(const std::string outputFile, bool append = true) const;
+            void writeToFile(const std::string outputFile, 
+                                    const bool append = true) const;
 
             ByteStore() noexcept;
-            ByteStore(std::size_t n_bytes) noexcept;
+            ByteStore(const std::size_t n_bytes) noexcept;
             template <std::size_t N>
             ByteStore(const std::bitset<N>& bset) {
                 std::size_t numBsetBytes = getByteCount(bset);
@@ -56,39 +57,39 @@ namespace csc {
                 }                    
             }
             ByteStore(const std::string inputFile) noexcept;
-            ByteStore(const std::byte b) noexcept;
+            ByteStore(const std::byte& b) noexcept;
             virtual ~ByteStore() {};
 
             std::string toString() const;
 
-            void set(std::size_t pos, unsigned char byte);
-            void set(std::size_t pos, const std::byte byte);
-            void set(std::size_t pos, const std::bitset<BYTE_SIZE>);
+            void set(const std::size_t pos, const unsigned char byte);
+            void set(const std::size_t pos, const std::byte byte);
+            void set(const std::size_t pos, const std::bitset<BYTE_SIZE>);
 
-            const std::byte get(std::size_t pos) const;
-            std::byte get(std::size_t pos);
+            const std::byte get(const std::size_t pos) const;
+            std::byte get(const std::size_t pos);
 
-            const std::bitset<BYTE_SIZE> getBitset(std::size_t pos) const;
-            std::bitset<BYTE_SIZE> getBitset(std::size_t pos);
+            const std::bitset<BYTE_SIZE> getBitset(const std::size_t pos) const;
+            std::bitset<BYTE_SIZE> getBitset(const std::size_t pos);
 
-            bool getBit(std::size_t pos) const;
+            bool getBit(const std::size_t pos) const;
             
-            inline void insert(std::size_t pos, const std::byte byte);
-            inline void insert(std::size_t pos, const std::bitset<BYTE_SIZE> bset);
-            inline void insert(std::size_t pos, unsigned char byte);
+            void insert(const std::size_t pos, const std::byte& byte);
+            void insert(const std::size_t pos, const std::bitset<BYTE_SIZE>& bset);
+            void insert(const std::size_t pos, const unsigned char& byte);
 
-            inline void pushEnd(const std::byte byte);
-            inline void pushEnd(const std::bitset<BYTE_SIZE> bset);
-            inline void pushEnd(unsigned char byte);
+            void pushEnd(const std::byte& byte);
+            void pushEnd(const std::bitset<BYTE_SIZE>& bset);
+            void pushEnd(const unsigned char& byte);
 
-            inline std::byte popEnd();
+            std::byte popEnd();
             
-            inline std::bitset<BYTE_SIZE> popEndBitset();
+            std::bitset<BYTE_SIZE> popEndBitset();
 
-            inline void extend(const ByteStore& bs);
+            void extend(const ByteStore& bs);
 
-            std::byte&       operator[](std::size_t i);
-            const std::byte& operator[](std::size_t i) const;
+            std::byte&       operator[](const std::size_t i);
+            const std::byte& operator[](const std::size_t i) const;
 
             friend std::ostream& operator<<(std::ostream& os, const ByteStore& bs);
             
