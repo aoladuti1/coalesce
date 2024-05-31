@@ -14,9 +14,10 @@ set(LINK_MODE EXTERNAL)
 file(GLOB SOURCES src/*.cpp)
 add_executable(Coalesce ${SOURCES})
 
-list(APPEND CMAKE_PREFIX_PATH lib/cmake/bitstore)
-find_package(BitStorePackage CONFIG REQUIRED)
-target_link_libraries(Coalesce PRIVATE CSC::BitStore)
+list(APPEND CMAKE_PREFIX_PATH lib/cmake/bytestore)
+find_package(ByteStorePackage CONFIG REQUIRED)
+target_link_libraries(Coalesce PRIVATE CSC::ByteStore)
+target_include_directories(Coalesce PUBLIC inc)
 target_include_directories(Coalesce PUBLIC include)
 
 
