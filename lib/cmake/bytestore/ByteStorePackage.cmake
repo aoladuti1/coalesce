@@ -19,7 +19,7 @@ set(CMAKE_IMPORT_FILE_VERSION 1)
 set(_cmake_targets_defined "")
 set(_cmake_targets_not_defined "")
 set(_cmake_expected_targets "")
-foreach(_cmake_expected_target IN ITEMS CSC::BitStore)
+foreach(_cmake_expected_target IN ITEMS CSC::ByteStore)
   list(APPEND _cmake_expected_targets "${_cmake_expected_target}")
   if(TARGET "${_cmake_expected_target}")
     list(APPEND _cmake_targets_defined "${_cmake_expected_target}")
@@ -47,13 +47,13 @@ unset(_cmake_expected_targets)
 
 
 # The installation prefix configured by this project.
-set(_IMPORT_PREFIX "C:/Program Files (x86)/BitStoreProj")
+set(_IMPORT_PREFIX "C:/Program Files (x86)/ByteStoreProj")
 
-# Create imported target CSC::BitStore
-add_library(CSC::BitStore STATIC IMPORTED)
+# Create imported target CSC::ByteStore
+add_library(CSC::ByteStore STATIC IMPORTED)
 
 # Load information for each installed configuration.
-file(GLOB _cmake_config_files "${CMAKE_CURRENT_LIST_DIR}/BitStorePackage-*.cmake")
+file(GLOB _cmake_config_files "${CMAKE_CURRENT_LIST_DIR}/ByteStorePackage-*.cmake")
 foreach(_cmake_config_file IN LISTS _cmake_config_files)
   include("${_cmake_config_file}")
 endforeach()
