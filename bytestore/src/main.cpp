@@ -137,7 +137,13 @@ const std::byte& ByteStore::operator[](const std::size_t i) const {
     return store[i];
 }
 
+
 namespace csc {
+
+    bool operator==(const ByteStore& bs1, const ByteStore& bs2) {
+        return bs1.store == bs2.store;
+    }   
+    
     std::ostream& operator<<(std::ostream& os, const ByteStore& bs) {
         if (bs.size() > 0) {
             unsigned char b = (unsigned char) bs.get(0);
