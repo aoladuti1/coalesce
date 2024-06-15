@@ -47,8 +47,7 @@ namespace csc {
 
             ByteStore() noexcept;
             ByteStore(const std::size_t n_bytes) noexcept;
-            template <std::size_t N>
-            ByteStore(const std::bitset<N>& bset) {
+            template <std::size_t N> ByteStore(const std::bitset<N>& bset) {
                 std::size_t numBsetBytes = getByteCount(bset);
                 store = std::vector<std::byte>(numBsetBytes);
                 std::size_t sizeVal = size();
@@ -90,6 +89,8 @@ namespace csc {
 
             std::byte&       operator[](const std::size_t i);
             const std::byte& operator[](const std::size_t i) const;
+
+            friend bool operator==(const ByteStore& bs1, const ByteStore& bs2);
 
             friend std::ostream& operator<<(std::ostream& os, const ByteStore& bs);
             

@@ -47,7 +47,7 @@ unset(_cmake_expected_targets)
 
 
 # The installation prefix configured by this project.
-set(_IMPORT_PREFIX "C:/Program Files (x86)/ByteStoreProj")
+set(_IMPORT_PREFIX "C:/Repositories/coalesce/bytestore/build/install/mingw")
 
 # Create imported target CSC::ByteStore
 add_library(CSC::ByteStore STATIC IMPORTED)
