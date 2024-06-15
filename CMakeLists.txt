@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.15.0)
 project(CoalesceProj VERSION 0.1.0 LANGUAGES CXX)
 
-include(CTest)
 include(CPack)
 enable_testing()
 
@@ -11,13 +10,14 @@ set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
 set(LINK_MODE EXTERNAL)
 
-file(GLOB SOURCES src/*.cpp)
+file(GLOB SOURCES src/*.cpp testing/*.cpp)
 add_executable(Coalesce ${SOURCES})
 
 list(APPEND CMAKE_PREFIX_PATH lib/cmake/bytestore)
 find_package(ByteStorePackage CONFIG REQUIRED)
 target_link_libraries(Coalesce PRIVATE CSC::ByteStore)
 target_include_directories(Coalesce PUBLIC inc)
+target_include_directories(Coalesce PUBLIC testing)
 target_include_directories(Coalesce PUBLIC include)
 
 
