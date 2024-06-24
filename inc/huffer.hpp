@@ -65,6 +65,8 @@ std::vector<std::byte> bitsetToByteVect(std::bitset<N> bset) {
 HuffNode* genTree(std::priority_queue<HuffNode*,
                        std::vector<HuffNode*>,Compare>& pq);
 
+void delTree(HuffNode* root);
+
 std::map<std::byte, std::size_t> getByteFrequencies(const ByteStore& bs);
 
 std::string padByteCode(const std::string code);

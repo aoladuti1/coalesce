@@ -51,6 +51,15 @@ HuffNode* genTree(std::priority_queue<HuffNode*,
     return pq.top();
 }
 
+void delTree(HuffNode* root) {
+    if (root == nullptr) {
+        return;
+    }
+    delTree(root->left);
+    delTree(root->right);
+    delete root;
+}
+
 std::map<std::byte, std::size_t> getByteFrequencies(const ByteStore& bs) {
     auto byteMap = std::map<std::byte, std::size_t>();
     for (std::size_t i = 0; i < bs.size(); i++) {
