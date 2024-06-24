@@ -62,7 +62,7 @@ std::vector<std::byte> bitsetToByteVect(std::bitset<N> bset) {
     return ret;
 }
 
-HuffNode* genTree(std::priority_queue<HuffNode*,
+HuffNode* newTree(std::priority_queue<HuffNode*,
                        std::vector<HuffNode*>,Compare>& pq);
 
 void delTree(HuffNode* root);

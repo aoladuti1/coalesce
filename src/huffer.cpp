@@ -40,7 +40,7 @@ void encodeFrequencies(
 }
 
 // Encoding Tree
-HuffNode* genTree(std::priority_queue<HuffNode*,
+HuffNode* newTree(std::priority_queue<HuffNode*,
                          std::vector<HuffNode*>,
                          Compare>& pq) {
     while (pq.size() > 1) {
