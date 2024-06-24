@@ -1,19 +1,15 @@
 #include <bytestore.hpp>
-#include <huffer.hpp>
 #include <map>
 #include <tests.hpp>
+#include <huffer.hpp>
+#include <filesystem>
+#include <queue>
+#include <map>
+#include <iostream>
+#include <bitset>
 
-using namespace csc;
-
-std::map<std::byte, std::size_t> getByteFrequencies(const ByteStore& bs) {
-    auto byteMap = std::map<std::byte, std::size_t>();
-    for (std::size_t i = 0; i < bs.size(); i++) {
-        std::byte bsVal = bs.get(i);
-        byteMap[bsVal] = byteMap[bsVal] + 1;
-    }
-    return byteMap;
-}
+using namespace csc; // mainly (csc::BYTE_SIZE, csc::ByteStore)
 
 int main() {
-    __run_tests();
+    _RunTests();
 }
