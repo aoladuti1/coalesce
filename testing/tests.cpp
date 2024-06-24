@@ -1,7 +1,13 @@
 #include <tests.hpp>
 
 using namespace csc;
-bool __run_tests() {
+
+bool _printPassAndReturn(std::string name, bool success) {
+    std::cout << name << " -> " << ((success) ? "passed" : "failed") << "\n";
+    return success;
+}
+
+bool _HeaderEncodeTest() {
     auto x = std::map<std::byte, std::size_t>();
     x[(std::byte)'a'] = 8;
     x[(std::byte)'b'] = 9;
@@ -14,7 +20,8 @@ bool __run_tests() {
     // Generate minHeap
     for (auto it = x.begin(); it != x.end(); it++)
         pq.push(new HuffNode(it->first,  it->second));
-    encodeFrequencies(genTree(pq), codex);
+    HuffNode* root = newTree(pq);
+    encodeFrequencies(root, codex);
     auto header = genHeaderBytes(".mp3", getTotalFrequency(x), codex);
     std::string testString = "0000000000000000000"
     "0000000000000000000000000000000000000011001"
@@ -25,6 +32,15 @@ bool __run_tests() {
     std::string str = "";
     for (int i = 0; i < 32; i++)
         str += std::bitset<8>((int)header.at(i)).to_string();
-    std::cout << ((str == testString) ? "true" : "false");
-    return true;
+    bool success = str == testString;
+    delTree(root);
+    return _printPassAndReturn("HeaderEncodeTest", success);
+}
+
+bool _RunTests() {
+    auto successTracker = std::vector<bool>();
+    successTracker.push_back(_HeaderEncodeTest());
+    for (auto x : successTracker)
+        if (x == false) return false;
+    return _printPassAndReturn("All tests", true);
 }

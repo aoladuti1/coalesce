@@ -11,5 +11,5 @@
 using namespace csc; // mainly (csc::BYTE_SIZE, csc::ByteStore)
 
 int main() {
-    __run_tests();
+    _RunTests();
 }
