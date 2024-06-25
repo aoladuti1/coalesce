@@ -52,9 +52,8 @@ HuffNode* newTree(std::priority_queue<HuffNode*,
 }
 
 void delTree(HuffNode* root) {
-    if (root == nullptr) {
+    if (root == nullptr)
         return;
-    }
     delTree(root->left);
     delTree(root->right);
     delete root;
@@ -63,7 +62,7 @@ void delTree(HuffNode* root) {
 std::map<std::byte, std::size_t> getByteFrequencies(const ByteStore& bs) {
     auto byteMap = std::map<std::byte, std::size_t>();
     for (std::size_t i = 0; i < bs.size(); i++) {
-         std::byte bsVal = bs.get(i);
+         std::byte bsVal = bs.at(i);
          byteMap[bsVal] = byteMap[bsVal] + 1;
     }
     return byteMap;
@@ -152,7 +151,7 @@ std::map<std::byte, std::size_t> processFile(
         }
         for (unsigned char b; rf >> b;) {
             std::byte castb = (std::byte) b;
-            output.pushEnd(castb);
+            output.push_back(castb);
             byteMap[castb] = byteMap[castb] + 1;
         }
         rf.close();
