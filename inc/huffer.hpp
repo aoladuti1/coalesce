@@ -30,7 +30,7 @@ public:
     }
 };
 
-std::vector<std::byte> stringToPaddedBytes(std::string str);
+ByteStore stringToPaddedBytes(std::string str);
 
 void encodeFrequencies(
     HuffNode* root, std::string code, std::map<std::byte, std::string>& output) ;
@@ -71,7 +71,7 @@ std::map<std::byte, std::size_t> getByteFrequencies(const ByteStore& bs);
 
 std::string padByteCode(const std::string code);
 
-std::vector<std::byte> genHeaderBytes(
+ByteStore genHeaderBytes(
     std::string ext, std::size_t n_total_chars, 
     const std::map<std::byte, std::string>& codeTable);
 

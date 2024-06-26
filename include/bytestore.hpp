@@ -59,14 +59,14 @@ namespace csc {
             ByteStore(const std::byte& b) noexcept;
             virtual ~ByteStore() {};
 
-            std::string toString() const;
+            std::string to_string() const;
 
             void set(const std::size_t pos, const unsigned char byte);
             void set(const std::size_t pos, const std::byte byte);
             void set(const std::size_t pos, const std::bitset<BYTE_SIZE>);
 
-            const std::byte get(const std::size_t pos) const;
-            std::byte get(const std::size_t pos);
+            const std::byte at(const std::size_t pos) const;
+            std::byte at(const std::size_t pos);
 
             const std::bitset<BYTE_SIZE> getBitset(const std::size_t pos) const;
             std::bitset<BYTE_SIZE> getBitset(const std::size_t pos);
@@ -77,15 +77,32 @@ namespace csc {
             void insert(const std::size_t pos, const std::bitset<BYTE_SIZE>& bset);
             void insert(const std::size_t pos, const unsigned char& byte);
 
-            void pushEnd(const std::byte& byte);
-            void pushEnd(const std::bitset<BYTE_SIZE>& bset);
-            void pushEnd(const unsigned char& byte);
+            void push_back(const std::byte& byte);
+            void push_back(const std::bitset<BYTE_SIZE>& bset);
+            void push_back(const unsigned char& byte);
 
-            std::byte popEnd();
+            std::byte top_pop_back();
             
-            std::bitset<BYTE_SIZE> popEndBitset();
+            std::bitset<BYTE_SIZE> top_pop_back_bitset();
 
             void extend(const ByteStore& bs);
+
+            template <std::size_t N>
+            void extend(std::bitset<N> bset) {
+                if (N % BYTE_SIZE != 0) {
+                    throw std::invalid_argument(
+                        "N must be divisible by the number of bits in a byte");
+                }
+                for (std::size_t i = 0; i < N;) {
+                    auto nextByte = std::bitset<BYTE_SIZE>();
+                    for (int j = 0; j < BYTE_SIZE && i < N; j++, i++) {
+                        nextByte[BYTE_SIZE - 1 - j] = bset[N - 1 - i];
+                    }
+                    push_back(nextByte);
+                }
+            }
+
+            void extend(std::string byteStr);
 
             std::byte&       operator[](const std::size_t i);
             const std::byte& operator[](const std::size_t i) const;

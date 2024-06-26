@@ -19,24 +19,15 @@ HuffNode::HuffNode(HuffNode* leftChild, HuffNode* rightChild) {
 void encodeFrequencies(
     HuffNode* root, std::string code, 
     std::map<std::byte, std::string>& output) {
-    if (root == nullptr) {
+    if (root == nullptr)
         return;
-    }
-    
     auto left = root->left, right = root->right;
-    
-    if (left != nullptr) {
+    if (left != nullptr)
         encodeFrequencies(root->left, code + "0", output);
-    }
-    
-    if (right != nullptr) {
+    if (right != nullptr)
         encodeFrequencies(root->right, code + "1", output);
-    }
-    
-    if (left == nullptr && right == nullptr) {
+    if (left == nullptr && right == nullptr)
         output[root->data] = code;
-    }
-    
 }
 
 // Encoding Tree
@@ -52,9 +43,8 @@ HuffNode* newTree(std::priority_queue<HuffNode*,
 }
 
 void delTree(HuffNode* root) {
-    if (root == nullptr) {
+    if (root == nullptr)
         return;
-    }
     delTree(root->left);
     delTree(root->right);
     delete root;
@@ -63,7 +53,7 @@ void delTree(HuffNode* root) {
 std::map<std::byte, std::size_t> getByteFrequencies(const ByteStore& bs) {
     auto byteMap = std::map<std::byte, std::size_t>();
     for (std::size_t i = 0; i < bs.size(); i++) {
-         std::byte bsVal = bs.get(i);
+         std::byte bsVal = bs.at(i);
          byteMap[bsVal] = byteMap[bsVal] + 1;
     }
     return byteMap;
@@ -80,16 +70,15 @@ std::string padByteCode(const std::string code) {
     return ret;
 }
 
-std::vector<std::byte> stringToPaddedBytes(std::string str) {
-    auto ret = std::vector<std::byte>();
+ByteStore stringToPaddedBytes(std::string str) {
+    auto ret = ByteStore();
     for (int i = 0; i < str.length();) {
-        auto nextByte = std::bitset<BYTE_SIZE>();
+        std::bitset<BYTE_SIZE> nextByte = std::bitset<BYTE_SIZE>();
         for (int j = 0; j < BYTE_SIZE && i < str.length(); j++, i++) {
             nextByte[BYTE_SIZE - 1 - j] = std::stoi(std::string{str[i]});
         }
-        ret.push_back((std::byte) nextByte.to_ulong());
+        ret.push_back(nextByte);
     }  
-
     return ret;
 }
 
@@ -106,32 +95,31 @@ void encodeFrequencies(
     (CHAR[1BYTE]LENGTH[1BYTE]PADDEDCODE..N) .. NUMBER_CHARS_TOTAL
     
 */
-std::vector<std::byte> genHeaderBytes(
+ByteStore genHeaderBytes(
     std::string ext, std::size_t n_total_chars, 
     const std::map<std::byte, std::string>& codeTable) {
     // Make returned container
-    auto ret = std::vector<std::byte>();
-    auto totalLenBytes = bitsetToByteVect(
+    ByteStore ret = ByteStore();
+    ByteStore totalLenBytes = ByteStore(
         std::bitset<SIZE_T_BIT_SIZE>(n_total_chars));
-    std::byte extLenB = (std::byte) ext.length();
-    std::byte numUniqueB = (std::byte) codeTable.size();
+    std::size_t extLen = ext.length();
+    std::size_t numUnique = codeTable.size();
     for (int i = 0; i < SIZE_T_BIT_SIZE / BYTE_SIZE; i++) {
         ret.push_back(totalLenBytes[i]);
     }
-    ret.push_back(extLenB);
+    ret.push_back(extLen);
     for (int i = 0; i < ext.length(); i++) {
-        ret.push_back((std::byte) ext[i]);
+        ret.push_back(ext[i]);
     }
-    ret.push_back(numUniqueB);
+    ret.push_back(numUnique);
     for (auto it = codeTable.cbegin(); it != codeTable.cend(); it++) {
         std::byte characterB = it->first;
-        std::byte codeLenB = (std::byte) ((codeTable.at(it->first)).length());
+        std::size_t codeLen = codeTable.at(it->first).length();
         ret.push_back(characterB);
-        ret.push_back(codeLenB);
+        ret.push_back(codeLen);
         std::string paddedCodeStr = padByteCode(it->second);
-        auto paddedCodeBytes = stringToPaddedBytes(paddedCodeStr);
-        ret.reserve(paddedCodeBytes.size() + ret.size());
-        ret.insert(ret.end(), paddedCodeBytes.begin(), paddedCodeBytes.end());
+        ByteStore paddedCodeBytes = stringToPaddedBytes(paddedCodeStr);
+        ret.extend(paddedCodeBytes);
     }
     return ret;
 }
@@ -152,7 +140,7 @@ std::map<std::byte, std::size_t> processFile(
         }
         for (unsigned char b; rf >> b;) {
             std::byte castb = (std::byte) b;
-            output.pushEnd(castb);
+            output.push_back(castb);
             byteMap[castb] = byteMap[castb] + 1;
         }
         rf.close();
