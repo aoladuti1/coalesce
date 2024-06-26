@@ -50,12 +50,17 @@ void delTree(HuffNode* root) {
     delete root;
 }
 
-std::map<std::byte, std::size_t> getByteFrequencies(const ByteStore& bs) {
+std::map<std::byte, std::size_t> getByteFrequencies(std::string inputFile) {
     auto byteMap = std::map<std::byte, std::size_t>();
-    for (std::size_t i = 0; i < bs.size(); i++) {
-         std::byte bsVal = bs.at(i);
-         byteMap[bsVal] = byteMap[bsVal] + 1;
+    std::ifstream rf(inputFile, std::ios::in | std::ios::binary);
+    if(!rf) {
+        throw std::invalid_argument("Can't open file " + inputFile);
     }
+    for (unsigned char b; rf >> b;) {
+        std::byte byteB = (std::byte) b;
+        byteMap[byteB] = byteMap[byteB] + 1;
+    }
+    rf.close();
     return byteMap;
 }
 
@@ -133,18 +138,18 @@ std::size_t getTotalFrequency(std::map<std::byte, std::size_t> codeFreqs) {
 
 std::map<std::byte, std::size_t> processFile(
     const std::string inputFile, ByteStore& output) {
-        std::ifstream rf(inputFile, std::ios::in | std::ios::binary);
-        auto byteMap = std::map<std::byte, std::size_t>();
-        if(!rf) {
-            throw std::invalid_argument("Can't open file " + inputFile);
-        }
-        for (unsigned char b; rf >> b;) {
-            std::byte castb = (std::byte) b;
-            output.push_back(castb);
-            byteMap[castb] = byteMap[castb] + 1;
-        }
-        rf.close();
-        return byteMap;
+    std::ifstream rf(inputFile, std::ios::in | std::ios::binary);
+    auto byteMap = std::map<std::byte, std::size_t>();
+    if(!rf) {
+        throw std::invalid_argument("Can't open file " + inputFile);
+    }
+    for (unsigned char b; rf >> b;) {
+        std::byte castb = (std::byte) b;
+        output.push_back(castb);
+        byteMap[castb] = byteMap[castb] + 1;
+    }
+    rf.close();
+    return byteMap;
 }
 
 std::vector<std::string> filepathsInDir(std::string dir) {
