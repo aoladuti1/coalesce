@@ -67,7 +67,8 @@ HuffNode* newTree(std::priority_queue<HuffNode*,
 
 void delTree(HuffNode* root);
 
-std::map<std::byte, std::size_t> getByteFrequencies(std::string inputFile);
+std::map<std::byte, std::size_t> getByteFrequencies(
+    std::string inputFile, std::size_t& counter);
 
 std::string padByteCode(const std::string code);
 

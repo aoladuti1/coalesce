@@ -50,7 +50,8 @@ void delTree(HuffNode* root) {
     delete root;
 }
 
-std::map<std::byte, std::size_t> getByteFrequencies(std::string inputFile) {
+std::map<std::byte, std::size_t> getByteFrequencies(
+    std::string inputFile, std::size_t& counter) {
     auto byteMap = std::map<std::byte, std::size_t>();
     std::ifstream rf(inputFile, std::ios::in | std::ios::binary);
     if(!rf) {
@@ -59,6 +60,7 @@ std::map<std::byte, std::size_t> getByteFrequencies(std::string inputFile) {
     for (unsigned char b; rf >> b;) {
         std::byte byteB = (std::byte) b;
         byteMap[byteB] = byteMap[byteB] + 1;
+        counter++;
     }
     rf.close();
     return byteMap;
