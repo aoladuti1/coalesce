@@ -32,7 +32,7 @@ bool _HeaderEncodeTest() {
     std::string str = "";
     for (int i = 0; i < 32; i++)
         str += std::bitset<8>((int)header.at(i)).to_string();
-    bool success = str == testString;
+    bool success = str == testString && header.size() == 32;
     std::size_t j = 0;
     delTree(root);
     return _printPassAndReturn("HeaderEncodeTest", success);
