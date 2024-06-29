@@ -15,12 +15,8 @@ bool _HeaderEncodeTest() {
     x[(std::byte)'d'] = 13;
     x[(std::byte)'e'] = 16;
     x[(std::byte)'f'] = 45;
-    auto pq = std::priority_queue<HuffNode*, std::vector<HuffNode*>, Compare>();
     auto codex = std::map<std::byte, std::string>();
-    // Generate minHeap
-    for (auto it = x.begin(); it != x.end(); it++)
-        pq.push(new HuffNode(it->first,  it->second));
-    HuffNode* root = newTree(pq);
+    HuffNode* root = newTree(x);
     encodeFrequencies(root, codex);
     auto header = genHeaderBytes(".mp3", getTotalFrequency(x), codex);
     std::string testString = "0000000000000000000"
@@ -38,9 +34,26 @@ bool _HeaderEncodeTest() {
     return _printPassAndReturn("HeaderEncodeTest", success);
 }
 
+bool _FileWrite() {
+    std::string file = "x.txt";
+    std::filesystem::path p = std::filesystem::path(file);    
+    std::string ext = p.extension().string();
+    std::size_t total_chars = 0;
+    std::map<std::byte, std::size_t> freqTable = getByteFrequencies(file, total_chars);
+    HuffNode* root = newTree(freqTable);
+    auto codeTable = std::map<std::byte, std::string>();
+    encodeFrequencies(root, codeTable);
+    auto header = genHeaderBytes(ext, total_chars, codeTable);
+    for (const auto& x : codeTable)
+        std::cout << ((unsigned char) x.first) << " " << (x.second) << "\n";
+    header.writeToFile("x.csc", false);
+    return true;
+}
+
 bool _RunTests() {
     auto successTracker = std::vector<bool>();
     successTracker.push_back(_HeaderEncodeTest());
+    successTracker.push_back(_FileWrite());
     for (auto x : successTracker)
         if (x == false) return false;
     return _printPassAndReturn("All tests", true);

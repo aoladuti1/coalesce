@@ -31,9 +31,10 @@ void encodeFrequencies(
 }
 
 // Encoding Tree
-HuffNode* newTree(std::priority_queue<HuffNode*,
-                         std::vector<HuffNode*>,
-                         Compare>& pq) {
+HuffNode* newTree(std::map<std::byte, std::size_t>& freqTable) {
+    auto pq = std::priority_queue<HuffNode*, std::vector<HuffNode*>, Compare>();
+    for (auto it = freqTable.begin(); it != freqTable.end(); it++)
+        pq.push(new HuffNode(it->first,  it->second));
     while (pq.size() > 1) {
         auto lChild = topPop(pq);
         auto rChild = topPop(pq);
@@ -124,6 +125,7 @@ ByteStore genHeaderBytes(
     ByteStore ret = ByteStore();
     ByteStore totalLenBytes = ByteStore(
         std::bitset<SIZE_T_BIT_SIZE>(n_total_chars));
+    // TODO: NOTE THAT EXTLEN CAN BE 0
     std::size_t extLen = ext.length();
     std::size_t numUnique = codeTable.size();
     for (int i = 0; i < SIZE_T_BIT_SIZE / BYTE_SIZE; i++) {
