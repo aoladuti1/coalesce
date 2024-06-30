@@ -94,13 +94,16 @@ std::string padByteCode(const std::string code) {
 }
 
 ByteStore stringToPaddedBytes(std::string str) {
-    auto ret = ByteStore();
-    for (int i = 0; i < str.length();) {
-        std::bitset<BYTE_SIZE> nextByte = std::bitset<BYTE_SIZE>();
-        for (int j = 0; j < BYTE_SIZE && i < str.length(); j++, i++) {
-            nextByte[BYTE_SIZE - 1 - j] = std::stoi(std::string{str[i]});
+    std::size_t byteNo = str.length() / BYTE_SIZE;
+    auto ret = ByteStore((str.length() % BYTE_SIZE != 0) ? byteNo + 1 : byteNo);
+    for (std::size_t i = 0, bcount = 0; i < str.length(); bcount+=1) {
+        unsigned char nextByte; // uninit friendly
+        for (std::size_t j = 0; j < BYTE_SIZE && i < str.length(); j++, i++) {
+            if (str[i] == '1') {
+                nextByte |= (1 << (BYTE_SIZE - 1 - j));
+            }
         }
-        ret.push_back(nextByte);
+        ret.set(bcount, nextByte);
     }  
     return ret;
 }
@@ -178,4 +181,17 @@ std::vector<std::string> filepathsInDir(std::string dir) {
         ret.push_back(entry.path().string());
     // /*see*/ std::cout << fs::is_directory("./");
     return ret;
+}
+
+void writeCodesToFile(std::string inputFile, std::string outputFile, 
+                      std::map<std::byte, std::string>& codeTable) {
+    std::ifstream rf(inputFile, std::ios::in | std::ios::binary);
+    std::byte bytes[BYTE_SIZE * 64];
+
+    // concat code strings while nextwritesize less than N
+    // if nextwritesize >= N set sparebits to the remainder
+    // place remainder in buffer
+    // continue
+    rf.close();
+
 }
