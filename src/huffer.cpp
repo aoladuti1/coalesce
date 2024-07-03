@@ -96,16 +96,27 @@ std::string padByteCode(const std::string code) {
 ByteStore stringToPaddedBytes(std::string str) {
     std::size_t byteNo = str.length() / BYTE_SIZE;
     auto ret = ByteStore((str.length() % BYTE_SIZE != 0) ? byteNo + 1 : byteNo);
-    for (std::size_t i = 0, bcount = 0; i < str.length(); bcount+=1) {
-        unsigned char nextByte; // uninit friendly
-        for (std::size_t j = 0; j < BYTE_SIZE && i < str.length(); j++, i++) {
-            if (str[i] == '1') {
+    for (std::size_t i = 0, bcount = 0; i < str.length(); bcount += 1) {
+        unsigned char nextByte = 0;
+        for (std::size_t j = 0; j < BYTE_SIZE && i < str.length(); j++, i++)
+            if (str[i] == '1')
                 nextByte |= (1 << (BYTE_SIZE - 1 - j));
-            }
-        }
         ret.set(bcount, nextByte);
     }  
     return ret;
+}
+
+std::size_t fillBuffer(std::string code, std::byte* arr, std::size_t arrLen) {
+    std::size_t bcount = 0;
+    for (std::size_t i = 0; bcount < arrLen; bcount++) {
+        unsigned char nextByte = 0;
+        for (std::size_t j = 0; j < BYTE_SIZE; j++, i++) {
+            if (code[i] == '1')
+                nextByte |= (1 << (BYTE_SIZE - 1 - j));
+        }
+        arr[bcount] = (std::byte) nextByte;
+    }
+    return bcount;
 }
 
 void encodeFrequencies(
@@ -114,20 +125,22 @@ void encodeFrequencies(
 }
 
 /*
-    HEADER (ITEM [LENGTH])===
-    NUMBER_CHARS_TOTAL [8BYTES]
-    NUM_EXT_CHARS [1BYTE] EXT_CHARS [NUM_EXT_CHARS]
-    NUMBER_OF_UNIQUE_CHARS [1BYTE]
-    (CHAR [1BYTE] LENGTH [1BYTE] PADDEDCODE [VARIABLE BYTES])[NUMBER_CHARS_TOTAL]
+HEADER (ITEM [BYTE LENGTH OF ITEM] (NOTE: NO NEWLINES IN HEADER))===
+NUMBER_CHARS_TOTAL [8]
+NUM_EXT_CHARS [1] EXT_CHARS [NUM_EXT_CHARS]
+NUM_UNIQUE_CHARS [1]
+(CHAR [1] CHAR_CODE_LENGTH [1] 
+    PADDEDCODE [MIN BYTES TO STORE CHAR_CODE_LENGTH BITS])[NUM_UNIQUE_CHARS]
 */
 ByteStore genHeaderBytes(
     std::string ext, std::size_t n_total_chars, 
     const std::map<std::byte, std::string>& codeTable) {
     // Make returned container
     ByteStore ret = ByteStore();
+    // TODO: reserve 64
     ByteStore totalLenBytes = ByteStore(
         std::bitset<SIZE_T_BIT_SIZE>(n_total_chars));
-    // TODO: NOTE THAT EXTLEN CAN BE 0
+    // NOTE THAT EXTLEN CAN BE 0
     std::size_t extLen = ext.length();
     std::size_t numUnique = codeTable.size();
     for (int i = 0; i < SIZE_T_BIT_SIZE / BYTE_SIZE; i++) {
@@ -182,15 +195,91 @@ std::vector<std::string> filepathsInDir(std::string dir) {
     return ret;
 }
 
-void writeCodesToFile(std::string inputFile, std::string outputFile, 
-                      std::map<std::byte, std::string>& codeTable) {
-    std::ifstream rf(inputFile, std::ios::in | std::ios::binary);
-    std::byte bytes[BYTE_SIZE * 64];
+void writeCodesToFile(std::string inputFile, std::string outputFile) {
+    constexpr std::size_t bufferSize = 512;
+    std::byte buffer[bufferSize];
+    std::filesystem::path p = std::filesystem::path(inputFile);    
+    std::string ext = p.extension().string();
+    std::size_t total_chars = 0;
+    std::map<std::byte, std::size_t> freqTable = getByteFrequencies(
+        inputFile, total_chars);
+    HuffNode* root = newTree(freqTable);
+    auto codeTable = std::map<std::byte, std::string>();
+    encodeFrequencies(root, codeTable);
+    auto header = genHeaderBytes(ext, total_chars, codeTable);
+    header.writeToFile(outputFile, false);
+    std::ofstream wf(outputFile, std::ios::out | std::ios::binary | std::ios::app);
+    std::ifstream rf(inputFile,  std::ios::in  | std::ios::binary );
+    std::string encoding = "";
+    std::string fullCode = "";
+    if (!rf) {
+        std::cerr << "Can't open " + inputFile;
+    }
+    if (!wf) {
+        std::cerr << "Can't open " + outputFile;
+    }
 
-    // concat code strings while nextwritesize less than N
-    // if nextwritesize >= N set sparebits to the remainder
-    // place remainder in buffer
-    // continue
-    rf.close();
-
+    for (char b; rf.get(b);) {
+        encoding += codeTable[(std::byte) b];
+        fullCode += codeTable[(std::byte) b];
+        if (encoding.length() >= bufferSize * BYTE_SIZE) {
+            fillBuffer(encoding, buffer, bufferSize);
+            for (std::size_t i = 0; i < bufferSize; i++) {
+                wf.put((unsigned char) buffer[i]);
+            }
+            encoding = encoding.substr(bufferSize * BYTE_SIZE);
+        }
+    }
+    if (encoding.length() > 0) {
+        ByteStore remainingBytes = stringToPaddedBytes(encoding);
+        for (std::size_t i = 0; i < remainingBytes.size(); i++) {
+            wf.put((unsigned char) remainingBytes[i]);
+        }
+    }
 }
+
+void writeDecodedFile(std::string inputFile, std::string outputFile) {
+    // constexpr std::size_t bufferSize = 5;
+    // std::byte buffer[bufferSize];
+    // std::filesystem::path p = std::filesystem::path(inputFile);    
+    // std::string ext = p.extension().string();
+    // std::size_t total_chars = 0;
+    // std::map<std::byte, std::size_t> freqTable = getByteFrequencies(
+    //     inputFile, total_chars);
+    // HuffNode* root = newTree(freqTable);
+    // auto codeTable = std::map<std::byte, std::string>();
+    // encodeFrequencies(root, codeTable);
+    // auto header = genHeaderBytes(ext, total_chars, codeTable);
+    // header.writeToFile(outputFile, false);
+    // std::ofstream wf(outputFile, std::ios::out | std::ios::binary | std::ios::app);
+    // std::ifstream rf(inputFile,  std::ios::in  | std::ios::binary );
+    // std::string encoding = "";
+    // std::string fullCode = "";
+    // if (!rf) {
+    //     std::cerr << "Can't open " + inputFile;
+    // }
+    // if (!wf) {
+    //     std::cerr << "Can't open " + outputFile;
+    // }
+
+    // for (char b; rf.get(b);) {
+    //     encoding += codeTable[(std::byte) b];
+    //     fullCode += codeTable[(std::byte) b];
+    //     if (encoding.length() >= bufferSize * BYTE_SIZE) {
+    //         fillBuffer(encoding, buffer, bufferSize);
+    //         for (std::size_t i = 0; i < bufferSize; i++) {
+    //             std::cout << std::bitset<8>((unsigned char) buffer[i]);
+    //             wf.put((unsigned char) buffer[i]);
+    //         }
+    //         encoding = encoding.substr(bufferSize * BYTE_SIZE);
+    //     }
+    // }
+    // if (encoding.length() > 0) {
+    //     ByteStore remainingBytes = stringToPaddedBytes(encoding);
+    //     for (std::size_t i = 0; i < remainingBytes.size(); i++) {
+    //             std::cout << std::bitset<8>((unsigned char) remainingBytes[i]);
+    //         wf.put((unsigned char) remainingBytes[i]);
+    //     }
+    // }
+}
+//000011001111110101100010

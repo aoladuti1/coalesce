@@ -85,7 +85,7 @@ std::vector<std::string> filepathsInDir(std::string dir);
 std::map<std::byte, std::size_t> processFile(
     const std::string inputFile, ByteStore& output);
 
-void writeCodesToFile(std::string inputFile, std::string outputFile, 
-                      std::map<std::byte, std::string>& codeTable);
+void writeCodesToFile(std::string inputFile, std::string outputFile);
+void writeDecodedFile(std::string inputFile, std::string outputFile);
 
 #endif

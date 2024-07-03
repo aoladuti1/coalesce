@@ -34,7 +34,7 @@ bool _HeaderEncodeTest() {
     return _printPassAndReturn("HeaderEncodeTest", success);
 }
 
-bool _FileWrite() {
+bool _FileWriteTest() {
     std::string file = "x.txt";
     std::filesystem::path p = std::filesystem::path(file);    
     std::string ext = p.extension().string();
@@ -44,16 +44,21 @@ bool _FileWrite() {
     auto codeTable = std::map<std::byte, std::string>();
     encodeFrequencies(root, codeTable);
     auto header = genHeaderBytes(ext, total_chars, codeTable);
-    for (const auto& x : codeTable)
-        std::cout << ((unsigned char) x.first) << " " << (x.second) << "\n";
+    bool succ = codeTable[(std::byte) 'a'] == "0" && codeTable[(std::byte) 'b'] == "1";
     header.writeToFile("x.csc", false);
-    return true;
+    return _printPassAndReturn("FileWriteTest", succ);
+}
+
+bool _AllWriteTest() {
+    writeCodesToFile("y.txt", "y.csc");
+    return _printPassAndReturn("AllWriteTest", true);
 }
 
 bool _RunTests() {
     auto successTracker = std::vector<bool>();
     successTracker.push_back(_HeaderEncodeTest());
-    successTracker.push_back(_FileWrite());
+    successTracker.push_back(_FileWriteTest());
+    successTracker.push_back(_AllWriteTest());
     for (auto x : successTracker)
         if (x == false) return false;
     return _printPassAndReturn("All tests", true);
