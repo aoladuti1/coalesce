@@ -19,16 +19,15 @@ bool _HeaderEncodeTest() {
     HuffNode* root = newTree(x);
     encodeFrequencies(root, codex);
     auto header = genHeaderBytes(".mp3", getTotalFrequency(x), codex);
-    std::string testString = "0000000000000000000"
-    "0000000000000000000000000000000000000011001"
-    "11000001000010111001101101011100000011001100"
-    "0001100110000100000100111000000110001000000100"
-    "11110000011000110000001110000000011001000000"
-    "001110100000011001010000001111000000011001100000000100000000";
+    std::string testString = "00000000000000000000000000000000000000000000000"
+        "00000000001100111000001000010111001101101011100000011001100000000000"
+        "00110011000010000010011100000011000100000010011110000011000110000001"
+        "11000000001100100000000111010000001100101000000111100000001100110000"
+        "0000100000000";
     std::string str = "";
-    for (int i = 0; i < 32; i++)
+    for (int i = 0; i < header.size(); i++)
         str += std::bitset<8>((int)header.at(i)).to_string();
-    bool success = str == testString && header.size() == 32;
+    bool success = str == testString;
     std::size_t j = 0;
     delTree(root);
     return _printPassAndReturn("HeaderEncodeTest", success);
@@ -50,8 +49,21 @@ bool _FileWriteTest() {
 }
 
 bool _AllWriteTest() {
-    writeCodesToFile("y.txt", "y.csc");
-    return _printPassAndReturn("AllWriteTest", true);
+    std::string stem = "y";
+    std::string ext = ".txt";
+    writeCodesToFile(stem + ext, stem + ".csc");
+    writeDecodedFile(stem + ".csc", stem + ".jpg");
+    std::ifstream rf1(stem + ext, std::ios::binary | std::ios::in);
+    std::ifstream rf2(stem + ".jpg", std::ios::binary | std::ios::in);
+    char b1, b2;
+    bool success = true;
+    while (rf1.get(b1)) {
+        rf2.get(b2);
+        if ( b1 != b2 ) {
+            success = false;
+        }
+    }
+    return _printPassAndReturn("AllWriteTest", success);
 }
 
 bool _RunTests() {
