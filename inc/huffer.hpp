@@ -62,12 +62,15 @@ std::vector<std::byte> bitsetToByteVect(std::bitset<N> bset) {
     return ret;
 }
 
-HuffNode* newTree(std::priority_queue<HuffNode*,
-                       std::vector<HuffNode*>,Compare>& pq);
+HuffNode* newTree(std::map<std::byte, std::size_t>& freqTable);
 
 void delTree(HuffNode* root);
 
-std::map<std::byte, std::size_t> getByteFrequencies(const ByteStore& bs);
+std::map<std::byte, std::size_t> getByteFrequencies(
+    std::ifstream, std::size_t& counter);
+
+std::map<std::byte, std::size_t> getByteFrequencies(
+    const std::string inputFile, std::size_t& counter);
 
 std::string padByteCode(const std::string code);
 
@@ -81,5 +84,8 @@ std::vector<std::string> filepathsInDir(std::string dir);
 
 std::map<std::byte, std::size_t> processFile(
     const std::string inputFile, ByteStore& output);
+
+void writeCodesToFile(std::string inputFile, std::string outputFile);
+void writeDecodedFile(std::string inputFile, std::string outputFile);
 
 #endif

@@ -2,5 +2,6 @@
 #include <map>
 #include <huffer.hpp>
 bool _HeaderEncodeTest();
+bool _FileWriteTest();
+bool _AllWriteTest();
 bool _RunTests();
-std::map<std::byte, std::size_t> getByteFrequencies(const csc::ByteStore& bs);
