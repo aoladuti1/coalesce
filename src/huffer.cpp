@@ -299,7 +299,13 @@ void writeCodesToFile(std::string inputFile, std::string outputFile) {
 }
 
 void writeDecodedFile(std::string codeFile, std::string decodeFile) {
+
     std::ifstream rf(codeFile,  std::ios::in  | std::ios::binary );
+    if (std::filesystem::exists(decodeFile)) {
+        std::ofstream file;
+        file.open(decodeFile, std::ios::out);
+        file.close();
+    }
     std::ofstream wf(decodeFile, std::ios::out | std::ios::binary | std::ios::app);
     if (!rf) {
         std::cerr << "Can't open " + codeFile;
