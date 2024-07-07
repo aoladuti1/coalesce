@@ -6,6 +6,11 @@
 
 using namespace csc;
 
+// TODO: erase ByteStore? change constant names. 
+// Ensure the 0xFF for numunique uses a byte_size agnostic mask
+// e.g. unsigned char = (1 << BYTESIZE) - 1 (try uint if not working)
+// Refactor, speedup.
+
 HuffNode::HuffNode(std::byte character, std::size_t frequency) {
     data = character;
     freq = frequency;
@@ -183,13 +188,17 @@ ByteStore genHeaderBytes(
     for (int i = 0; i < ext.length(); i++) {
         ret.push_back(ext[i]);
     }
+    constexpr unsigned char zmask = ~0;
     unsigned short numUnique = codeTable.size();
-    unsigned char highNum = (numUnique >> 8) & 0xFF;
-    unsigned char lowNum = numUnique & 0xFF;
+    unsigned char highNum = (numUnique >> BYTE_SIZE) & zmask;
+    unsigned char lowNum = numUnique & zmask;
     ByteStore numUniqueBytes = ByteStore(
         std::bitset<sizeof(unsigned short)>(numUnique));
     ret.push_back(highNum);
     ret.push_back(lowNum);
+    for (int i = 2; i < sizeof(unsigned short); i++) {
+        ret.push_back(0);
+    }
     for (auto it = codeTable.cbegin(); it != codeTable.cend(); it++) {
         std::byte characterB = it->first;
         std::size_t codeLen = codeTable.at(it->first).length();
@@ -299,7 +308,6 @@ void writeCodesToFile(std::string inputFile, std::string outputFile) {
 }
 
 void writeDecodedFile(std::string codeFile, std::string decodeFile) {
-
     std::ifstream rf(codeFile,  std::ios::in  | std::ios::binary );
     if (std::filesystem::exists(decodeFile)) {
         std::ofstream file;
