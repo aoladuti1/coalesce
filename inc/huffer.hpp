@@ -2,12 +2,14 @@
 #ifndef HUFFER
 #define HUFFER
 #include <map>
-#include <bytestore.hpp>
 #include <queue>
+#include <fstream>
+#include <iostream>
 #include <filesystem>
+#include <bitset>
+#include <climits>
 
-constexpr std::size_t SIZE_T_BIT_SIZE = sizeof(std::size_t) * csc::BYTE_SIZE;
-using namespace csc;
+constexpr std::size_t IO_BUFFER_SIZE = 512; // 512 bytes
 
 class HuffNode {
     public:
@@ -16,7 +18,7 @@ class HuffNode {
         std::byte data;
         std::size_t freq;
 
-        HuffNode(std::byte data, std::size_t freq);
+        HuffNode(const std::byte character, const std::size_t frequency);
 
         HuffNode(HuffNode* leftChild, HuffNode* rightChild);
 
@@ -30,62 +32,65 @@ public:
     }
 };
 
-ByteStore stringToPaddedBytes(std::string str);
+enum class ENDIAN
+{
+#if defined(_MSC_VER) && !defined(__clang__)
+    little = 0,
+    big    = 1,
+    native = little
+#else
+    little = __ORDER_LITTLE_ENDIAN__,
+    big    = __ORDER_BIG_ENDIAN__,
+    native = __BYTE_ORDER__
+#endif
+};
+
+std::vector<std::byte> stringToPaddedBytes(const std::string str);
+
+std::size_t fillBuffer(
+    std::byte* arr, const std::size_t arrLen, const std::string code);
 
 void encodeFrequencies(
-    HuffNode* root, std::string code, std::map<std::byte, std::string>& output) ;
+    HuffNode* root, std::string code, std::map<std::byte, std::string>& output);
 
 void encodeFrequencies(
     HuffNode* root, std::map<std::byte, std::string>& codeTable);
 
 template <class A, class B, class C>
 A topPop(std::priority_queue<A, B, C>& pq) {
-         auto ret = pq.top();
+         auto top = pq.top();
          pq.pop();
-         return ret;
+         return top;
 }
 
-template <std::size_t N>
-std::vector<std::byte> bitsetToByteVect(std::bitset<N> bset) {
-    if (N % BYTE_SIZE != 0) {
-        throw std::invalid_argument(
-            "N must be divisible by the number of bits in a byte");
-    }
-    auto ret = std::vector<std::byte>();
-    for (std::size_t i = 0; i < N;) {
-        auto nextByte = std::bitset<BYTE_SIZE>();
-        for (int j = 0; j < BYTE_SIZE && i < N; j++, i++) {
-            nextByte[BYTE_SIZE - 1 - j] = bset[N - 1 - i];
-        }
-        ret.push_back((std::byte) nextByte.to_ulong());
-    }
-    return ret;
+inline bool isTreeLeaf(HuffNode* node) {
+    return node->left == nullptr;
 }
 
-HuffNode* newTree(std::map<std::byte, std::size_t>& freqTable);
+HuffNode* newTree(const std::map<std::byte, std::size_t>& freqTable);
 
 void delTree(HuffNode* root);
 
 std::map<std::byte, std::size_t> getByteFrequencies(
-    std::ifstream, std::size_t& counter);
+    std::ifstream& rf, std::size_t& counter);
 
 std::map<std::byte, std::size_t> getByteFrequencies(
     const std::string inputFile, std::size_t& counter);
 
 std::string padByteCode(const std::string code);
 
-ByteStore genHeaderBytes(
-    std::string ext, std::size_t n_total_chars, 
+std::vector<std::byte> genHeaderBytes(
+    const std::string ext, const std::size_t n_total_chars, 
     const std::map<std::byte, std::string>& codeTable);
 
-std::size_t getTotalFrequency(std::map<std::byte, std::size_t> codeFreqs);
+std::vector<std::string> filepathsInDir(const std::string dir);
 
-std::vector<std::string> filepathsInDir(std::string dir);
+void writeToFile(const std::vector<std::byte>& bytes,
+                 const std::string outputFile, const bool append);
 
-std::map<std::byte, std::size_t> processFile(
-    const std::string inputFile, ByteStore& output);
-
-void writeCodesToFile(std::string inputFile, std::string outputFile);
-void writeDecodedFile(std::string inputFile, std::string outputFile);
+void writeCodesToFile(
+    const std::string inputFile, const std::string outputFile);
+void writeDecodedFile(
+    const std::string inputFile, const std::string outputFile);
 
 #endif
