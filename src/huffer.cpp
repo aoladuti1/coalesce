@@ -169,12 +169,15 @@ void encodeFrequencies(
 }
 
 /*
-HEADER (ITEM [BYTE LENGTH OF ITEM] (NOTE: NO NEWLINES IN HEADER))===
+Header Notation: ITEM [BYTE LENGTH OF ITEM]
+#####
 NUMBER_CHARS_TOTAL [SIZEOF(STD::SIZE_T)]
-NUM_EXT_CHARS [1] EXT_CHARS [NUM_EXT_CHARS]
-NUM_UNIQUE_CHARS [2]
-(CHAR [1] CHAR_CODE_LENGTH [1] 
-    PADDED_CODE [MIN BYTES TO STORE CHAR_CODE_LENGTH BITS])[NUM_UNIQUE_CHARS] 
+NUM_EXT_CHARS [1] 
+EXT_CHARS [NUM_EXT_CHARS]
+NUM_UNIQUE_CHARS [SIZEOF(UNSIGNED SHORT)]
+(  CHAR [1] 
+   CHAR_CODE_LENGTH [1] 
+   PADDED_CODE [MIN BYTES TO STORE CHAR_CODE_LENGTH BITS]  )[NUM_UNIQUE_CHARS] 
 */
 std::vector<std::byte> genHeaderBytes(
     const std::string ext, const std::size_t n_total_chars, 
@@ -206,7 +209,8 @@ std::vector<std::byte> genHeaderBytes(
     return ret;
 }
 
-HuffNode* tryGetLeaf(HuffNode* curNode, const std::string encoding, std::size_t& moveCounter) {
+HuffNode* tryGetLeaf(
+    HuffNode* curNode, const std::string encoding, std::size_t& moveCounter) {
     std::size_t i = 0;
     for (; i < encoding.length(); ++i) {
         if (curNode == nullptr || isTreeLeaf(curNode)) {
@@ -226,7 +230,6 @@ std::vector<std::string> filepathsInDir(const std::string dir) {
     auto ret = std::vector<std::string>();
     for (const auto & entry : fs::directory_iterator(dir))
         ret.push_back(entry.path().string());
-    // /*see*/ std::cout << fs::is_directory("./");
     return ret;
 }
 
@@ -262,10 +265,10 @@ void writeCodesToFile(const std::string inputFile, const std::string outputFile)
     std::string encoding = "";
     std::string fullCode = "";
     if (!rf) {
-        std::cerr << "Can't open " + inputFile;
+        throw std::invalid_argument("Can't open " + inputFile);
     }
     if (!wf) {
-        std::cerr << "Can't open " + outputFile;
+        throw std::invalid_argument("Can't open " + outputFile);
     }
     for (char b; rf.get(b);) {
         encoding += codeTable[(std::byte) b];
@@ -296,10 +299,10 @@ void writeDecodedFile(const std::string codeFile, const std::string decodeFile) 
     }
     std::ofstream wf(decodeFile, std::ios::out | std::ios::binary | std::ios::app);
     if (!rf) {
-        std::cerr << "Can't open " + codeFile;
+        throw std::invalid_argument("Can't open " + codeFile);
     }
     if (!wf) {
-        std::cerr << "Can't open " + decodeFile;
+        throw std::invalid_argument("Can't open " + decodeFile);
     }
     constexpr std::size_t bufferSize = IO_BUFFER_SIZE;
     char b;

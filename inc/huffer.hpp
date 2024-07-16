@@ -9,7 +9,7 @@
 #include <bitset>
 #include <climits>
 
-constexpr std::size_t IO_BUFFER_SIZE = 512; // 512 bytes
+constexpr std::size_t IO_BUFFER_SIZE = 512; // == 512 bytes
 
 class HuffNode {
     public:
@@ -24,7 +24,7 @@ class HuffNode {
 
 };
 
-// Custom comparator class
+// HuffNode comparator class
 class Compare {
 public:
     inline bool operator()(HuffNode* a, HuffNode* b) {
