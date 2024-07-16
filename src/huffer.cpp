@@ -137,13 +137,8 @@ std::string padByteCode(const std::string code) {
     return ret;
 }
 
-std::size_t paddedByteCount(const std::size_t bits) {
-    std::size_t byteNo = bits / CHAR_BIT;
-    return (bits % CHAR_BIT != 0) ? byteNo + 1 : byteNo;
-}
-
 std::vector<std::byte> stringToPaddedBytes(const std::string str) {
-    std::vector<std::byte> ret = std::vector<std::byte>(paddedByteCount(str.length()));
+    std::vector<std::byte> ret = std::vector<std::byte>(minByteCount(str.length()));
     for (std::size_t i = 0, bcount = 0; i < str.length(); bcount += 1) {
         unsigned char nextByte = 0;
         for (std::size_t j = 0; j < CHAR_BIT && i < str.length(); j++, i++)
@@ -336,7 +331,7 @@ void writeDecodedFile(const std::string codeFile, const std::string decodeFile) 
         std::byte character = (std::byte) b;
         rf.get(b);
         unsigned short codeLen = (unsigned short) b;
-        unsigned short codeByteLen = paddedByteCount(codeLen);
+        unsigned short codeByteLen = minByteCount(codeLen);
         std::string paddedCode = "";
         for (int i = 0; i < codeByteLen; i++) {
             rf.get(b);

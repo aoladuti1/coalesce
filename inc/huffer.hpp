@@ -79,6 +79,10 @@ std::map<std::byte, std::size_t> getByteFrequencies(
 
 std::string padByteCode(const std::string code);
 
+inline std::size_t minByteCount(const std::size_t nBits) {
+    return (nBits % CHAR_BIT != 0) ? (nBits / CHAR_BIT) + 1 : (nBits / CHAR_BIT);
+}
+
 std::vector<std::byte> genHeaderBytes(
     const std::string ext, const std::size_t n_total_chars, 
     const std::map<std::byte, std::string>& codeTable);
