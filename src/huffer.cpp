@@ -1,12 +1,31 @@
 #include <map>
 #include <huffer.hpp>
 #include <queue>
-#include <cstring>
 #include <algorithm>
 
-using namespace csc;
+#if __cplusplus >= 202002L
+    #include <bit>
+    #define CSC_BIG_ENDIAN std::endian::big == std::endian::native
+#else 
+    #define CSC_BIG_ENDIAN ENDIAN::big == ENDIAN::native
+#endif
 
-HuffNode::HuffNode(std::byte character, std::size_t frequency) {
+
+/*
+Hiya, this is a basic general-purpose Huffman Coding file
+compression algorithm implementation,
+using modern C++, the standard library (STL) and bitwise arithmetic.
+This is a small project generally made for C++ practice, and 
+to be extremely generalized (endian-independent, 
+loose byte representation requirements etc.)
+
+Compilation and System Reqs:
+-System must have 8 or more bits in a byte
+-Filenames must be 255 characters or less (including the extension)
+-C++17 minimum (G++, MSVC, Clang), or C++20 minimum (any).
+*/
+
+HuffNode::HuffNode(const std::byte character, const std::size_t frequency) {
     data = character;
     freq = frequency;
     left = right = nullptr;
@@ -32,8 +51,7 @@ void encodeFrequencies(
         output[root->data] = code;
 }
 
-// Encoding Tree
-HuffNode* newTree(std::map<std::byte, std::size_t>& freqTable) {
+HuffNode* newTree(const std::map<std::byte, std::size_t>& freqTable) {
     auto pq = std::priority_queue<HuffNode*, std::vector<HuffNode*>, Compare>();
     for (auto it = freqTable.begin(); it != freqTable.end(); it++)
         pq.push(new HuffNode(it->first,  it->second));
@@ -45,21 +63,21 @@ HuffNode* newTree(std::map<std::byte, std::size_t>& freqTable) {
     return pq.top();
 }
 
-HuffNode* remakeTree(std::map<std::byte, std::string>& codeTable) {
-    HuffNode* root = new HuffNode((std::byte)0,0);
+HuffNode* remakeTree(const std::map<std::byte, std::string>& codeTable) {
+    HuffNode* root = new HuffNode((std::byte) 0, 0);
     HuffNode* curNode = root;
     for (auto it = codeTable.begin(); it != codeTable.end(); it++) {
         HuffNode* curNode = root;
         std::byte character = it->first;
         std::string code = it->second;
-        for (unsigned short i = 0; i < code.length(); i++) {
+        for (int i = 0; i < code.length(); i++) {
             if (code[i] == '0') {
-                if ((curNode->left) == nullptr) {
+                if (curNode->left == nullptr) {
                     curNode->left = new HuffNode((std::byte) 0, 0L);
                 }
                 curNode = curNode->left;
-            } else if (code[i] == '1'){
-                if ((curNode->right) == nullptr) {
+            } else {
+                if (curNode->right == nullptr) {
                     curNode->right = new HuffNode((std::byte) 0, 0L);
                 }
                 curNode = curNode->right;
@@ -71,11 +89,11 @@ HuffNode* remakeTree(std::map<std::byte, std::string>& codeTable) {
 }
 
 void delTree(HuffNode* root) {
-    if (root == nullptr)
-        return;
-    delTree(root->left);
-    delTree(root->right);
-    delete root;
+    if (root != nullptr) {
+        delTree(root->left);
+        delTree(root->right);
+        delete root;
+    }
 }
 
 std::map<std::byte, std::size_t> getByteFrequencies(
@@ -112,41 +130,41 @@ std::map<std::byte, std::size_t> getByteFrequencies(
 }
 
 std::string padByteCode(const std::string code) {
-    int rem = code.size() % BYTE_SIZE;
+    int rem = code.size() % CHAR_BIT;
     int bext = 0;
     std::string ret = code;
     if (rem != 0)
-        bext = BYTE_SIZE - rem;
+        bext = CHAR_BIT - rem;
     for (int i = 0; i < bext; i++)
         ret = ret + "0";
     return ret;
 }
 
-std::size_t paddedByteCount(std::size_t bits) {
-    std::size_t byteNo = bits / BYTE_SIZE;
-    return (bits % BYTE_SIZE != 0) ? byteNo + 1 : byteNo;
+std::size_t paddedByteCount(const std::size_t bits) {
+    std::size_t byteNo = bits / CHAR_BIT;
+    return (bits % CHAR_BIT != 0) ? byteNo + 1 : byteNo;
 }
 
-ByteStore stringToPaddedBytes(std::string str) {
-    std::size_t byteNo = str.length() / BYTE_SIZE;
-    auto ret = ByteStore((str.length() % BYTE_SIZE != 0) ? byteNo + 1 : byteNo);
+std::vector<std::byte> stringToPaddedBytes(const std::string str) {
+    std::vector<std::byte> ret = std::vector<std::byte>(paddedByteCount(str.length()));
     for (std::size_t i = 0, bcount = 0; i < str.length(); bcount += 1) {
         unsigned char nextByte = 0;
-        for (std::size_t j = 0; j < BYTE_SIZE && i < str.length(); j++, i++)
+        for (std::size_t j = 0; j < CHAR_BIT && i < str.length(); j++, i++)
             if (str[i] == '1')
-                nextByte |= (1 << (BYTE_SIZE - 1 - j));
-        ret.set(bcount, nextByte);
+                nextByte |= (1 << (CHAR_BIT - 1 - j));
+        ret[bcount] = (std::byte) nextByte;
     }  
     return ret;
 }
 
-std::size_t fillBuffer(std::string code, std::byte* arr, std::size_t arrLen) {
+std::size_t fillBuffer(
+    std::byte* arr, const std::size_t arrLen, const std::string code) {
     std::size_t bcount = 0;
     for (std::size_t i = 0; bcount < arrLen; bcount++) {
         unsigned char nextByte = 0;
-        for (std::size_t j = 0; j < BYTE_SIZE; j++, i++) {
+        for (std::size_t j = 0; j < CHAR_BIT; j++, i++) {
             if (code[i] == '1')
-                nextByte |= (1 << (BYTE_SIZE - 1 - j));
+                nextByte |= (1 << (CHAR_BIT - 1 - j));
         }
         arr[bcount] = (std::byte) nextByte;
     }
@@ -160,93 +178,58 @@ void encodeFrequencies(
 
 /*
 HEADER (ITEM [BYTE LENGTH OF ITEM] (NOTE: NO NEWLINES IN HEADER))===
-NUMBER_CHARS_TOTAL [8]
+NUMBER_CHARS_TOTAL [SIZEOF(STD::SIZE_T)]
 NUM_EXT_CHARS [1] EXT_CHARS [NUM_EXT_CHARS]
 NUM_UNIQUE_CHARS [2]
 (CHAR [1] CHAR_CODE_LENGTH [1] 
-    PADDEDCODE [MIN BYTES TO STORE CHAR_CODE_LENGTH BITS])[NUM_UNIQUE_CHARS]
+    PADDED_CODE [MIN BYTES TO STORE CHAR_CODE_LENGTH BITS])[NUM_UNIQUE_CHARS]
 */
-ByteStore genHeaderBytes(
-    std::string ext, std::size_t n_total_chars, 
+std::vector<std::byte> genHeaderBytes(
+    const std::string ext, const std::size_t n_total_chars, 
     const std::map<std::byte, std::string>& codeTable) {
-    // Make returned container
-    ByteStore ret = ByteStore();
-    // TODO: reserve 64
-    ByteStore totalLenBytes = ByteStore(
-        std::bitset<SIZE_T_BIT_SIZE>(n_total_chars));
-    // NOTE THAT EXTLEN CAN BE 0
-    std::size_t extLen = ext.length();
-    for (int i = 0; i < SIZE_T_BIT_SIZE / BYTE_SIZE; i++) {
-        ret.push_back(totalLenBytes[i]);
-    }
-    ret.push_back(extLen);
-    for (int i = 0; i < ext.length(); i++) {
-        ret.push_back(ext[i]);
-    }
-    unsigned short numUnique = codeTable.size();
-    unsigned char highNum = (numUnique >> 8) & 0xFF;
-    unsigned char lowNum = numUnique & 0xFF;
-    ByteStore numUniqueBytes = ByteStore(
-        std::bitset<sizeof(unsigned short)>(numUnique));
-    ret.push_back(highNum);
-    ret.push_back(lowNum);
+    std::vector<std::byte> ret = std::vector<std::byte>();
+    ret.reserve(codeTable.size() * 2);
+    // +NUMBER_CHARS_TOTAL
+    for (int i = 0; i < sizeof(std::size_t); i++) 
+        ret.push_back((std::byte) (n_total_chars >> (i * CHAR_BIT)));
+    // +NUM_EXT_CHARS
+    ret.push_back((std::byte) ext.length());
+    // +EXT_CHARS
+    for (int i = 0; i < ext.length(); i++)
+        ret.push_back((std::byte) ext[i]);
+    // +NUM_UNIQUE_CHARS
+    for (int i = 0; i < sizeof(unsigned short); i++) 
+        ret.push_back((std::byte) (codeTable.size() >> (i * CHAR_BIT)));
     for (auto it = codeTable.cbegin(); it != codeTable.cend(); it++) {
-        std::byte characterB = it->first;
-        std::size_t codeLen = codeTable.at(it->first).length();
-        ret.push_back(characterB);
-        ret.push_back(codeLen);
+        // +CHAR
+        ret.push_back(it->first); 
+        // +CHAR_CODE_LENGTH
+        ret.push_back((std::byte) codeTable.at(it->first).length());
         std::string paddedCodeStr = padByteCode(it->second);
-        ByteStore paddedCodeBytes = stringToPaddedBytes(paddedCodeStr);
-        ret.extend(paddedCodeBytes);
+        std::vector<std::byte> paddedCodeBytes = stringToPaddedBytes(paddedCodeStr);
+        // +PADDED_CODE
+        ret.reserve(ret.size() + paddedCodeBytes.size());
+        ret.insert(ret.end(), paddedCodeBytes.begin(), paddedCodeBytes.end());
     }
     return ret;
 }
 
-bool finishedSearch(HuffNode* huffNode) {
-    // TODO remove the dual-side check
-    if (huffNode->left == nullptr && huffNode->right == nullptr) {
-        return true;
-    } else {
-        return false;
-    }
-}
-
-HuffNode* tryGetLeaf(HuffNode* curNode, const std::string& encoding, std::size_t& moveCounter) {
+HuffNode* tryGetLeaf(HuffNode* curNode, const std::string encoding, std::size_t& moveCounter) {
     std::size_t i = 0;
     for (; i < encoding.length(); ++i) {
-        if (curNode == nullptr || (curNode->left == nullptr && curNode->right == nullptr)) {
+        if (curNode == nullptr || isTreeLeaf(curNode)) {
             break;
-        }
-        if (encoding[i] == '0') {
+        } else if (encoding[i] == '0') {
             curNode = curNode->left;
-        } else if (encoding[i] == '1') {
-            curNode = curNode->right;
         } else {
-            std::cerr << "Unexpected encoding value\n";
-            break;
+            curNode = curNode->right;
         }
         ++moveCounter;
     }
     return curNode;
 }
 
-/*
-HEADER (ITEM [BYTE LENGTH OF ITEM] (NOTE: NO NEWLINES IN HEADER))===
-NUMBER_CHARS_TOTAL [8]
-NUM_EXT_CHARS [1] EXT_CHARS [NUM_EXT_CHARS]
-NUM_UNIQUE_CHARS [2]
-(CHAR [1] CHAR_CODE_LENGTH [1] 
-    PADDEDCODE [MIN BYTES TO STORE CHAR_CODE_LENGTH BITS])[NUM_UNIQUE_CHARS]
-*/
-
-std::size_t getTotalFrequency(std::map<std::byte, std::size_t> codeFreqs) {
-    std::size_t total = 0;
-    for (auto it = codeFreqs.begin(); it != codeFreqs.end(); it++)
-        total += (it->second);
-    return total;
-}
-
-std::vector<std::string> filepathsInDir(std::string dir) {
+std::vector<std::string> filepathsInDir(const std::string dir) {
     namespace fs = std::filesystem;
     auto ret = std::vector<std::string>();
     for (const auto & entry : fs::directory_iterator(dir))
@@ -255,8 +238,22 @@ std::vector<std::string> filepathsInDir(std::string dir) {
     return ret;
 }
 
-void writeCodesToFile(std::string inputFile, std::string outputFile) {
-    constexpr std::size_t bufferSize = 512;
+void writeToFile(const std::vector<std::byte>& bytes,
+                 const std::string outputFile, const bool append)  {
+    const auto flags = std::ios::out | std::ios::binary;
+    std::ofstream wf(outputFile, append ? flags | std::ios::app : flags);
+    if(!wf) {
+        throw std::invalid_argument("Can't open file " + outputFile);
+    }
+    std::size_t sizeVal = bytes.size();
+    for (std::size_t i = 0; i < sizeVal; i++) {
+        wf.put((unsigned char) bytes.at(i));
+    }
+    wf.close();
+}
+
+void writeCodesToFile(const std::string inputFile, const std::string outputFile) {
+    constexpr std::size_t bufferSize = IO_BUFFER_SIZE;
     std::byte buffer[bufferSize];
     std::filesystem::path p = std::filesystem::path(inputFile);    
     std::string ext = p.extension().string();
@@ -267,7 +264,7 @@ void writeCodesToFile(std::string inputFile, std::string outputFile) {
     auto codeTable = std::map<std::byte, std::string>();
     encodeFrequencies(root, codeTable);
     auto header = genHeaderBytes(ext, total_chars, codeTable);
-    header.writeToFile(outputFile, false);
+    writeToFile(header, outputFile, false);
     std::ofstream wf(outputFile, std::ios::out | std::ios::binary | std::ios::app);
     std::ifstream rf(inputFile,  std::ios::in  | std::ios::binary );
     std::string encoding = "";
@@ -280,16 +277,16 @@ void writeCodesToFile(std::string inputFile, std::string outputFile) {
     }
     for (char b; rf.get(b);) {
         encoding += codeTable[(std::byte) b];
-        if (encoding.length() >= bufferSize * BYTE_SIZE) {
-            fillBuffer(encoding, buffer, bufferSize);
+        if (encoding.length() >= bufferSize * CHAR_BIT) {
+            fillBuffer(buffer, bufferSize, encoding);
             for (std::size_t i = 0; i < bufferSize; i++) {
                 wf.put((unsigned char) buffer[i]);
             }
-            encoding = encoding.substr(bufferSize * BYTE_SIZE);
+            encoding = encoding.substr(bufferSize * CHAR_BIT);
         }
     }
     if (encoding.length() > 0) {
-        ByteStore remainingBytes = stringToPaddedBytes(encoding);
+        std::vector<std::byte> remainingBytes = stringToPaddedBytes(encoding);
         for (std::size_t i = 0; i < remainingBytes.size(); i++) {
             wf.put((unsigned char) remainingBytes[i]);
         }
@@ -298,9 +295,8 @@ void writeCodesToFile(std::string inputFile, std::string outputFile) {
     wf.close();
 }
 
-void writeDecodedFile(std::string codeFile, std::string decodeFile) {
-
-    std::ifstream rf(codeFile,  std::ios::in  | std::ios::binary );
+void writeDecodedFile(const std::string codeFile, const std::string decodeFile) {
+    std::ifstream rf(codeFile,  std::ios::in  | std::ios::binary);
     if (std::filesystem::exists(decodeFile)) {
         std::ofstream file;
         file.open(decodeFile, std::ios::out);
@@ -313,39 +309,41 @@ void writeDecodedFile(std::string codeFile, std::string decodeFile) {
     if (!wf) {
         std::cerr << "Can't open " + decodeFile;
     }
-    char b = 0;
-    std::size_t originalLen = 0;
-    constexpr std::size_t bufferSize = 512;
+    constexpr std::size_t bufferSize = IO_BUFFER_SIZE;
+    char b;
+    std::size_t originalLen;
     std::byte originalLenBytes[sizeof(std::size_t)];
     std::byte numUniqueBytes[sizeof(unsigned short)];
-    unsigned short extLen = 0;
-    unsigned short numUnique = 0;
+    unsigned short extLen;
+    unsigned short numUnique;
     std::string ext = "";
     std::map<std::byte, std::string> codeTable = std::map<std::byte, std::string>();
-    // TODO: Be endian agnostic
-    rf.read(reinterpret_cast<char*>(originalLenBytes), 8);
-    std::reverse(originalLenBytes, originalLenBytes + sizeof(std::size_t));
-    std::memcpy(&originalLen, originalLenBytes, 8);
+    rf.read(reinterpret_cast<char*>(originalLenBytes), sizeof(std::size_t));
+    if constexpr(CSC_BIG_ENDIAN) {
+        std::reverse(originalLenBytes, originalLenBytes + sizeof(std::size_t));
+    }
+    memcpy(&originalLen, originalLenBytes, sizeof(std::size_t));
     rf.get(b);
     extLen = (unsigned short) b;
-    for (unsigned short i = 0; i < extLen; i++) {
+    for (int i = 0; i < extLen; i++) {
         rf.get(b);
         ext += b;
     }
-    // TODO: Be endian agnostic
     rf.read(reinterpret_cast<char*>(numUniqueBytes), sizeof(unsigned short));
-    std::reverse(numUniqueBytes, numUniqueBytes + sizeof(unsigned short));
-    std::memcpy(&numUnique, numUniqueBytes, sizeof(unsigned short));
-    for (unsigned short i = 0; i < numUnique; i++) {
+    if constexpr(CSC_BIG_ENDIAN) {
+        std::reverse(numUniqueBytes, numUniqueBytes + sizeof(unsigned short));
+    }
+    memcpy(&numUnique, numUniqueBytes, sizeof(unsigned short));
+    for (int i = 0; i < numUnique; i++) {
         rf.get(b);
         std::byte character = (std::byte) b;
         rf.get(b);
         unsigned short codeLen = (unsigned short) b;
         unsigned short codeByteLen = paddedByteCount(codeLen);
         std::string paddedCode = "";
-        for (unsigned short i = 0; i < codeByteLen; i++) {
+        for (int i = 0; i < codeByteLen; i++) {
             rf.get(b);
-            paddedCode += std::bitset<BYTE_SIZE>(b).to_string();
+            paddedCode += std::bitset<CHAR_BIT>(b).to_string();
         }
         codeTable[character] = paddedCode.substr(0, codeLen);
     }
@@ -354,14 +352,14 @@ void writeDecodedFile(std::string codeFile, std::string decodeFile) {
     std::string encoding = "";
     std::size_t writeCount = 0;
     while (writeCount < originalLen) {
-        for (int i = 0; i < bufferSize * BYTE_SIZE && rf.get(b); i++) {
-            encoding += std::bitset<BYTE_SIZE>(b).to_string();
+        for (int i = 0; (i < IO_BUFFER_SIZE * CHAR_BIT) && rf.get(b); i++) {
+            encoding += std::bitset<CHAR_BIT>(b).to_string();
         }
         while (writeCount < originalLen && !encoding.empty()) {
             std::size_t moveCount = 0;
             curNode = tryGetLeaf(curNode, encoding, moveCount);
             encoding = encoding.substr(moveCount);
-            if (curNode->left == nullptr && curNode->right == nullptr) {
+            if (isTreeLeaf(curNode)) {
                 wf.put((unsigned char)(curNode->data));
                 writeCount++;
                 curNode = root;
@@ -372,4 +370,3 @@ void writeDecodedFile(std::string codeFile, std::string decodeFile) {
     wf.close();
     delTree(root);
 }
-//000011001111110101100010

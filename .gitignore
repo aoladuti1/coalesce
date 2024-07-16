@@ -12,3 +12,5 @@ bitstore/include/
 BitStore/lib/
 
 testing/y.jpg
+
+bytestore/
