@@ -27,7 +27,7 @@ class HuffNode {
 // Custom comparator class
 class Compare {
 public:
-    bool operator()(HuffNode* a, HuffNode* b) {
+    inline bool operator()(HuffNode* a, HuffNode* b) {
         return a->freq > b->freq;
     }
 };
