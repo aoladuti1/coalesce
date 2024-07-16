@@ -10,9 +10,7 @@
     #define CSC_BIG_ENDIAN ENDIAN::big == ENDIAN::native
 #endif
 
-
-/*
-Hiya, this is a basic general-purpose Huffman Coding file
+/* Hiya, this is a basic general-purpose Huffman Coding file
 compression algorithm implementation,
 using modern C++, the standard library (STL) and bitwise arithmetic.
 This is a small project generally made for C++ practice, and 
@@ -22,8 +20,7 @@ loose byte representation requirements etc.)
 Compilation and System Reqs:
 -System must have 8 or more bits in a byte
 -Filenames must be 255 characters or less (including the extension)
--C++17 minimum (G++, MSVC, Clang), or C++20 minimum (any).
-*/
+-C++17 minimum (G++, MSVC, Clang), or C++20 minimum (any - will be standard). */
 
 HuffNode::HuffNode(const std::byte character, const std::size_t frequency) {
     data = character;
@@ -182,7 +179,7 @@ NUMBER_CHARS_TOTAL [SIZEOF(STD::SIZE_T)]
 NUM_EXT_CHARS [1] EXT_CHARS [NUM_EXT_CHARS]
 NUM_UNIQUE_CHARS [2]
 (CHAR [1] CHAR_CODE_LENGTH [1] 
-    PADDED_CODE [MIN BYTES TO STORE CHAR_CODE_LENGTH BITS])[NUM_UNIQUE_CHARS]
+    PADDED_CODE [MIN BYTES TO STORE CHAR_CODE_LENGTH BITS])[NUM_UNIQUE_CHARS] 
 */
 std::vector<std::byte> genHeaderBytes(
     const std::string ext, const std::size_t n_total_chars, 
