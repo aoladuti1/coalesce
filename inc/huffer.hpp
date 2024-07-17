@@ -9,7 +9,7 @@
 #include <bitset>
 #include <climits>
 
-constexpr std::size_t IO_BUFFER_SIZE = 512; // 512 bytes
+constexpr std::size_t IO_BUFFER_SIZE = 512; // == 512 bytes
 
 class HuffNode {
     public:
@@ -24,10 +24,10 @@ class HuffNode {
 
 };
 
-// Custom comparator class
+// HuffNode comparator class
 class Compare {
 public:
-    bool operator()(HuffNode* a, HuffNode* b) {
+    inline bool operator()(HuffNode* a, HuffNode* b) {
         return a->freq > b->freq;
     }
 };
@@ -78,6 +78,10 @@ std::map<std::byte, std::size_t> getByteFrequencies(
     const std::string inputFile, std::size_t& counter);
 
 std::string padByteCode(const std::string code);
+
+inline std::size_t minByteCount(const std::size_t nBits) {
+    return (nBits % CHAR_BIT != 0) ? (nBits / CHAR_BIT) + 1 : (nBits / CHAR_BIT);
+}
 
 std::vector<std::byte> genHeaderBytes(
     const std::string ext, const std::size_t n_total_chars, 
