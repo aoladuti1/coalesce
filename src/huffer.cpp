@@ -18,9 +18,10 @@ to be extremely generalized (endian-independent,
 loose byte representation requirements etc.)
 
 Compilation and System Reqs:
--System must have 8 or more bits in a byte
+-System must have at least 8 bits in a byte
+-Both sizeof(std::size_t) and sizeof(unsigned short) must match in alternate compiled binaries
 -Filenames must be 255 characters or less (including the extension)
--C++17 minimum (G++, MSVC, Clang), or C++20 minimum (any - will be standard). */
+-C++17 minimum (G++, MSVC, Clang), or C++20 minimum (any). */
 
 HuffNode::HuffNode(const std::byte character, const std::size_t frequency) {
     data = character;
@@ -290,7 +291,8 @@ void writeCodesToFile(const std::string inputFile, const std::string outputFile)
     wf.close();
 }
 
-void writeDecodedFile(const std::string codeFile, const std::string decodeFile) {
+void writeDecodedFile(const std::string codeFile, 
+                      const std::string decodeFile) {
     std::ifstream rf(codeFile,  std::ios::in  | std::ios::binary);
     if (std::filesystem::exists(decodeFile)) {
         std::ofstream file;

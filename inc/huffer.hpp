@@ -34,7 +34,7 @@ public:
 
 enum class ENDIAN
 {
-#if defined(_MSC_VER) && !defined(__clang__)
+#if (defined(__ORDER_LITTLE_ENDIAN__) && defined(__BYTE_ORDER__) && defined(__BYTE_ORDER__))
     little = 0,
     big    = 1,
     native = little
