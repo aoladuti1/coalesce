@@ -3,6 +3,8 @@
 #include <queue>
 #include <algorithm>
 
+const std::string OS_SEP(1, std::filesystem::path::preferred_separator);
+
 #if __cplusplus >= 202002L
     #include <bit>
     #define CSC_BIG_ENDIAN std::endian::big == std::endian::native
@@ -18,9 +20,10 @@ to be extremely generalized (endian-independent,
 loose byte representation requirements etc.)
 
 Compilation and System Reqs:
--System must have 8 or more bits in a byte
+-System must have at least 8 bits in a byte
+-Both sizeof(std::size_t) and sizeof(unsigned short) must match in alternate compiled binaries
 -Filenames must be 255 characters or less (including the extension)
--C++17 minimum (G++, MSVC, Clang), or C++20 minimum (any - will be standard). */
+-C++17 minimum (G++, MSVC, Clang), or C++20 minimum (any). */
 
 HuffNode::HuffNode(const std::byte character, const std::size_t frequency) {
     data = character;
@@ -265,10 +268,10 @@ void writeCodesToFile(const std::string inputFile, const std::string outputFile)
     std::string encoding = "";
     std::string fullCode = "";
     if (!rf) {
-        throw std::invalid_argument("Can't open " + inputFile);
+        throw std::invalid_argument("Can't read " + inputFile);
     }
     if (!wf) {
-        throw std::invalid_argument("Can't open " + outputFile);
+        throw std::invalid_argument("Can't compress to " + outputFile);
     }
     for (char b; rf.get(b);) {
         encoding += codeTable[(std::byte) b];
@@ -290,19 +293,12 @@ void writeCodesToFile(const std::string inputFile, const std::string outputFile)
     wf.close();
 }
 
-void writeDecodedFile(const std::string codeFile, const std::string decodeFile) {
-    std::ifstream rf(codeFile,  std::ios::in  | std::ios::binary);
-    if (std::filesystem::exists(decodeFile)) {
-        std::ofstream file;
-        file.open(decodeFile, std::ios::out);
-        file.close();
-    }
-    std::ofstream wf(decodeFile, std::ios::out | std::ios::binary | std::ios::app);
+void writeDecodedFile(const std::string codeFile, 
+                      const std::string decodeFilename,
+                      bool errorOnExistingOutput) {
+    std::ifstream rf(codeFile, std::ios::in  | std::ios::binary);
     if (!rf) {
-        throw std::invalid_argument("Can't open " + codeFile);
-    }
-    if (!wf) {
-        throw std::invalid_argument("Can't open " + decodeFile);
+        throw std::invalid_argument("Can't read " + codeFile);
     }
     constexpr std::size_t bufferSize = IO_BUFFER_SIZE;
     char b;
@@ -329,6 +325,15 @@ void writeDecodedFile(const std::string codeFile, const std::string decodeFile) 
         std::reverse(numUniqueBytes, numUniqueBytes + sizeof(unsigned short));
     }
     memcpy(&numUnique, numUniqueBytes, sizeof(unsigned short));
+    std::string outputFile = decodeFilename + ext;
+    if (std::filesystem::exists(outputFile) && errorOnExistingOutput) {
+        std::cerr << ("Can't decompress to existing file " + outputFile + "\n");
+        return;
+    }
+    std::ofstream wf(outputFile, std::ios::out | std::ios::binary | std::ios::app);
+    if (!wf) {
+        throw std::invalid_argument("Can't decompress to " + outputFile);
+    }
     for (int i = 0; i < numUnique; i++) {
         rf.get(b);
         std::byte character = (std::byte) b;
@@ -364,4 +369,58 @@ void writeDecodedFile(const std::string codeFile, const std::string decodeFile) 
     rf.close();
     wf.close();
     delTree(root);
+}
+
+void processFile(
+        const std::string& filePath, 
+        const std::string& outputFile, 
+        const bool decode, 
+        const bool verbose) {
+    if (std::filesystem::exists(outputFile)) {
+        if (verbose)
+            std::cout << outputFile << " already exists -- skipping\n";
+        return;
+    }    
+    // TODO: Put messages inside write functions
+    if (decode) {
+        if (verbose)
+            std::cout << "Decompressing " << filePath << " to " << outputFile << " ...\n";
+        writeDecodedFile(filePath, outputFile);
+    } else {
+        if (verbose)
+            std::cout << "Compressing " << filePath << " to " << outputFile << " ...\n";
+        writeCodesToFile(filePath, outputFile);
+    }
+}
+
+void processFile(
+        const std::string& filePath, const std::string& outputFile, const bool decode) {
+    processFile(filePath, outputFile, decode, false);
+}
+
+void processDirectory(
+        const std::string& dirPath, 
+        const std::string& outputDir, 
+        const bool decode, 
+        const bool verbose) {
+    for (const auto& entry : std::filesystem::directory_iterator(dirPath)) {
+        if (!entry.is_regular_file() || (decode && entry.path().extension() != COMPRESSION_EXT))
+            continue;
+        std::string replExt = decode ? "" : COMPRESSION_EXT;
+        std::string output = std::filesystem::path(entry.path().string()).filename().replace_extension(
+                replExt).string();
+        if (!std::filesystem::exists(outputDir)) {
+            // Attempt to create the directory
+            if (!std::filesystem::create_directories(outputDir)) {
+                throw std::runtime_error("Failed to create directory: " + outputDir);
+            }
+        }
+        processFile(entry.path().string(), 
+                    outputDir + OS_SEP + output, decode, verbose);
+    }
+}
+
+void processDirectory(
+        const std::string& dirPath, const std::string& outputDir, const bool decode) {
+    processDirectory(dirPath, outputDir, decode, false);
 }
