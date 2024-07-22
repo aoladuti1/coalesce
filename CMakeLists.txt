@@ -11,10 +11,16 @@ set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
 set(LINK_MODE EXTERNAL)
 
 file(GLOB SOURCES src/*.cpp testing/*.cpp)
-add_executable(Coalesce ${SOURCES})
+add_executable(coalesce ${SOURCES})
 
-target_include_directories(Coalesce PUBLIC inc)
-target_include_directories(Coalesce PUBLIC testing)
-target_include_directories(Coalesce PUBLIC include)
+target_include_directories(coalesce PUBLIC inc)
+target_include_directories(coalesce PUBLIC testing)
+target_include_directories(coalesce PUBLIC include)
+
+add_executable(csc ${SOURCES})
+
+target_include_directories(csc PUBLIC inc)
+target_include_directories(csc PUBLIC testing)
+target_include_directories(csc PUBLIC include)
 
 

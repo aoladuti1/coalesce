@@ -1,4 +1,3 @@
-
 #ifndef HUFFER
 #define HUFFER
 #include <map>
@@ -10,6 +9,7 @@
 #include <climits>
 
 constexpr std::size_t IO_BUFFER_SIZE = 512; // == 512 bytes
+const std::string COMPRESSION_EXT = ".csc";
 
 class HuffNode {
     public:
@@ -95,6 +95,26 @@ void writeToFile(const std::vector<std::byte>& bytes,
 void writeCodesToFile(
     const std::string inputFile, const std::string outputFile);
 void writeDecodedFile(
-    const std::string inputFile, const std::string outputFile);
+    const std::string inputFile, 
+    const std::string outputFile, 
+    bool errOnExistingOutput = true);
+
+void processFile(
+        const std::string& filePath, 
+        const std::string& outputFile, 
+        const bool decode,
+        const bool verbose);
+
+void processFile(
+    const std::string& filePath, const std::string& outputFile, const bool decode);
+
+void processDirectory(
+        const std::string& dirPath, 
+        const std::string& outputDir, 
+        const bool decode, 
+        const bool verbose);
+
+void processDirectory(
+    const std::string& dirPath, const std::string& outputDir, const bool decode);
 
 #endif
