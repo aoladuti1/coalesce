@@ -9,6 +9,7 @@
 #include <climits>
 
 constexpr std::size_t IO_BUFFER_SIZE = 512; // == 512 bytes
+constexpr bool ERR_ON_OVERWRITES = true;
 const std::string COMPRESSION_EXT = ".csc";
 
 class HuffNode {
@@ -87,17 +88,28 @@ std::vector<std::byte> genHeaderBytes(
     const std::string ext, const std::size_t n_total_chars, 
     const std::map<std::byte, std::string>& codeTable);
 
-std::vector<std::string> filepathsInDir(const std::string dir);
+void createDirsIfNeeded(const std::string& path);
 
 void writeToFile(const std::vector<std::byte>& bytes,
                  const std::string outputFile, const bool append);
 
-void writeCodesToFile(
-    const std::string inputFile, const std::string outputFile);
-void writeDecodedFile(
-    const std::string inputFile, 
+void writeCompFile(
+    const std::string inputFile,
     const std::string outputFile, 
-    bool errOnExistingOutput = true);
+    const bool verbose,
+    const bool errOnExistingOutput);
+
+void writeCompFile(
+    const std::string inputFile, const std::string outputFile, const bool verbose);
+
+void writeDecompFile(
+    const std::string inputFile, 
+    const std::string outputFile,
+    const bool verbose, 
+    const bool errOnExistingOutput);
+
+void writeDecompFile(
+    const std::string comp, const std::string decodeFilename, const bool verbose);
 
 void processFile(
         const std::string& filePath, 

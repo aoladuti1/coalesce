@@ -1,26 +1,40 @@
 #include <tests.hpp>
 #include <string.h>
 
-const std::string COALESCE_EXT = ".csc"; 
-
 void printHelp() {
-    std::cout 
-        << "Syntax: \n"
-        << "<csc|coalesce> <-c | -d | -h | -help> [-s] <FILES AND/OR DIRECTORIES> "
-                    "[--o] [OUTPUT FILES AND/OR DIRECTORIES]\n"
-        << "...Where [] == optional, <> == required and | == OR. \n\n"
-        << "Semantics: \n"
-        << "-c: compress\n-d: decompress\n-s: silence standard output\n--o: output list\n"
-        << "-h"
-        << "--------\n"
-        << "Note: each input will be matched to the output in order "
-        << "and matched in type. E.g. if the first input is a file, "
-        << "the first output will be matched to it and also be a file. "
-        << "Inputs without a specified output will be placed in the current folder. "
-        << "Enabling the -s flag will still print a message about not being able to "
-        << "decompress to existing files in the standard error output."
-        << "Ensure outputs for any files end in " + COALESCE_EXT
-        << std::endl;
+    const std::string helpText = R"(
+Coalesce
+--------
+Syntax: 
+<csc|coalesce> <-c | -d | -h | -help> [-s] <FILES AND/OR DIRECTORIES> [--o <OUTPUT FILES AND/OR DIRECTORIES>]
+...Where [] == optional, <> == required (if no help flag set), and | == OR.
+
+Semantics: 
+-h | -help: help
+-c: compression mode 
+-d: decompression mode
+-s: silent standard output
+--o: output list
+
+    ++Basic Usage Example (compress and decompress the file testfile.txt):
+csc -c testfile.txt --o Newfolder/testfile
+csc -d new_folder/testfile --o Newfolder/original
+(Check out new_folder, it'll hold both the compressed and uncompressed file.)
+
+    ++Compressing and Decompressing the whole Current Working Directory Example:
+csc -c . --o compression_folder
+csc -d compression_folder --o decompression_folder
+(NB: if coalesce.exe or csc.exe is not in the PATH variable, 
+you may need to prepend '.\' to 'csc' or 'coalesce' commands...)
+--------
+Note: each input will be matched to the output in order and matched in type. E.g. if the first input is a file, 
+the first specified output will be matched to it and also be a file.
+Inputs without a specified output will be output to the current folder.
+Decompression mode output and input files do not require a specified extension since it is stored in the respective compressed file.
+Compression output files do not require a specified extension, since it will be set to )" + COMPRESSION_EXT + R"(.
+Enabling the -s flag will still print a message about not being able to decompress to existing files in the standard error output.
+)";
+    std::cout << helpText << std::endl;
 }
 
 bool tryFindCompressed(std::filesystem::path& p) {
@@ -51,7 +65,6 @@ int main(int argc, char* argv[]) {
         std::cerr << "Not enough arguments. Use the -h or -help flag." << std::endl;
         return 1;         
     }
-    // Parse command line arguments
     for (int i = 1; i < argc; ++i) {
         if (strcmp(argv[i], "-d") == 0) {
             decode = true;
@@ -67,9 +80,10 @@ int main(int argc, char* argv[]) {
             }
             for (; i < argc; i++) {
                 std::filesystem::path p(argv[i]);
-                if (!decode && (tryFindCompressed(p) == 1)) {
-                    return 1;
-                }               
+                if (decode) {
+                    auto pNoExt = std::filesystem::path(p.string()).replace_extension("");
+                    p = std::filesystem::exists(pNoExt) ? p : pNoExt;
+                }                      
                 outputs.push_back(p.string());
             }
         } else {

@@ -8,8 +8,8 @@ bool _printPassAndReturn(std::string name, bool success) {
 bool _AllWriteTest() {
     std::string stem = "y";
     std::string ext = ".txt";
-    writeCodesToFile(stem + ext, stem + ".csc");
-    writeDecodedFile(stem + ".csc", stem + ".jpg");
+    writeCompFile(stem + ext, stem + ".csc", true);
+    writeDecompFile(stem + ".csc", stem + ".jpg", true);
     std::ifstream rf1(stem + ext, std::ios::binary | std::ios::in);
     std::ifstream rf2(stem + ".jpg", std::ios::binary | std::ios::in);
     char b1, b2;

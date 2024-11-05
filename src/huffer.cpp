@@ -228,14 +228,6 @@ HuffNode* tryGetLeaf(
     return curNode;
 }
 
-std::vector<std::string> filepathsInDir(const std::string dir) {
-    namespace fs = std::filesystem;
-    auto ret = std::vector<std::string>();
-    for (const auto & entry : fs::directory_iterator(dir))
-        ret.push_back(entry.path().string());
-    return ret;
-}
-
 void writeToFile(const std::vector<std::byte>& bytes,
                  const std::string outputFile, const bool append)  {
     const auto flags = std::ios::out | std::ios::binary;
@@ -250,7 +242,17 @@ void writeToFile(const std::vector<std::byte>& bytes,
     wf.close();
 }
 
-void writeCodesToFile(const std::string inputFile, const std::string outputFile) {
+void writeCompFile(
+        const std::string inputFile, 
+        const std::string outputFile, 
+        const bool verbose, 
+        const bool errOnExistingOutput) {
+    if (verbose)
+        std::cout << "Compressing " << inputFile << " to " << outputFile << " ...\n";
+    if (std::filesystem::exists(outputFile) && errOnExistingOutput) {
+        std::cerr << ("Can't compress to existing file " + outputFile + "\n");
+        return;
+    }
     constexpr std::size_t bufferSize = IO_BUFFER_SIZE;
     std::byte buffer[bufferSize];
     std::filesystem::path p = std::filesystem::path(inputFile);    
@@ -293,14 +295,21 @@ void writeCodesToFile(const std::string inputFile, const std::string outputFile)
     wf.close();
 }
 
-void writeDecodedFile(const std::string codeFile, 
-                      const std::string decodeFilename,
-                      bool errorOnExistingOutput) {
-    std::ifstream rf(codeFile, std::ios::in  | std::ios::binary);
+void writeCompFile(
+        const std::string inputFile, const std::string outputFile, const bool verbose) {
+    writeCompFile(inputFile, outputFile, verbose, ERR_ON_OVERWRITES);
+}
+
+void writeDecompFile(const std::string comp, 
+                     const std::string decodeFilename,
+                     const bool verbose,
+                     const bool errorOnExistingOutput) {
+    std::ifstream rf(comp, std::ios::in  | std::ios::binary);
     if (!rf) {
-        throw std::invalid_argument("Can't read " + codeFile);
+        throw std::invalid_argument("Can't read " + comp);
     }
     constexpr std::size_t bufferSize = IO_BUFFER_SIZE;
+    std::string outputFile;
     char b;
     std::size_t originalLen;
     std::byte originalLenBytes[sizeof(std::size_t)];
@@ -325,7 +334,13 @@ void writeDecodedFile(const std::string codeFile,
         std::reverse(numUniqueBytes, numUniqueBytes + sizeof(unsigned short));
     }
     memcpy(&numUnique, numUniqueBytes, sizeof(unsigned short));
-    std::string outputFile = decodeFilename + ext;
+    if (!std::filesystem::path(decodeFilename).has_extension()) {
+        outputFile = decodeFilename + ext;
+    } else {
+        outputFile = decodeFilename;
+    }
+    if (verbose)
+        std::cout << "Decompressing " << comp << " to " << outputFile << " ...\n";
     if (std::filesystem::exists(outputFile) && errorOnExistingOutput) {
         std::cerr << ("Can't decompress to existing file " + outputFile + "\n");
         return;
@@ -371,25 +386,43 @@ void writeDecodedFile(const std::string codeFile,
     delTree(root);
 }
 
+void writeDecompFile(
+        const std::string comp, const std::string decodeFilename, const bool verbose) {
+    writeDecompFile(comp, decodeFilename, verbose, ERR_ON_OVERWRITES);
+}
+
+void createDirsIfNeeded(const std::string& filePath, const bool verbose) {
+    std::filesystem::path fiPath(filePath);
+    std::filesystem::path dirPath = fiPath.parent_path();
+    if (!dirPath.empty() && dirPath != std::filesystem::current_path() 
+            && std::filesystem::create_directories(dirPath) && verbose) {
+        std::cout << "Successfully created directories: " << dirPath << "\n";
+    }
+}
+
 void processFile(
-        const std::string& filePath, 
+        const std::string& inputFile, 
         const std::string& outputFile, 
         const bool decode, 
         const bool verbose) {
-    if (std::filesystem::exists(outputFile)) {
+    std::string outPath = outputFile;
+    std::string inPath = inputFile;
+    bool dirWithSameName = std::filesystem::is_directory(outputFile);
+    if (!decode && !dirWithSameName)
+        outPath = std::filesystem::path(outputFile).replace_extension(COMPRESSION_EXT).string();
+    else if (decode && !dirWithSameName) {
+        inPath = std::filesystem::path(inputFile).replace_extension(COMPRESSION_EXT).string();
+    }
+    if (std::filesystem::exists(outPath) && !dirWithSameName) {
         if (verbose)
             std::cout << outputFile << " already exists -- skipping\n";
         return;
-    }    
-    // TODO: Put messages inside write functions
+    }
+    createDirsIfNeeded(outPath, verbose);
     if (decode) {
-        if (verbose)
-            std::cout << "Decompressing " << filePath << " to " << outputFile << " ...\n";
-        writeDecodedFile(filePath, outputFile);
+        writeDecompFile(inPath, outPath, verbose);
     } else {
-        if (verbose)
-            std::cout << "Compressing " << filePath << " to " << outputFile << " ...\n";
-        writeCodesToFile(filePath, outputFile);
+        writeCompFile(inPath, outPath, verbose);
     }
 }
 
@@ -404,11 +437,13 @@ void processDirectory(
         const bool decode, 
         const bool verbose) {
     for (const auto& entry : std::filesystem::directory_iterator(dirPath)) {
-        if (!entry.is_regular_file() || (decode && entry.path().extension() != COMPRESSION_EXT))
+        if (!entry.is_regular_file() 
+            || (decode  && entry.path().extension() != COMPRESSION_EXT)
+            || (!decode && entry.path().extension() == COMPRESSION_EXT))
             continue;
         std::string replExt = decode ? "" : COMPRESSION_EXT;
-        std::string output = std::filesystem::path(entry.path().string()).filename().replace_extension(
-                replExt).string();
+        std::string output = std::filesystem::path(
+            entry.path().string()).filename().replace_extension(replExt).string();
         if (!std::filesystem::exists(outputDir)) {
             // Attempt to create the directory
             if (!std::filesystem::create_directories(outputDir)) {
